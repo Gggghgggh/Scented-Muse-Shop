@@ -6,7 +6,25 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property string $order_number
+ * @property string $customer_name
+ * @property string|null $customer_email
+ * @property string|null $customer_phone
+ * @property string|null $county
+ * @property string|null $town
+ * @property array<int, array<string, mixed>> $items
+ * @property string $delivery_fee
+ * @property string $total_amount
+ * @property string $status
+ * @property string|null $notes
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ */
 #[Fillable([
     'user_id',
     'order_number',
@@ -32,11 +50,17 @@ class Order extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * @return HasMany<Payment, $this>
+     */
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);

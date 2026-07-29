@@ -26,6 +26,7 @@ type Product = {
     slug: string;
     description?: string | null;
     brand?: string | null;
+    fragrance_type?: string | null;
     price: string | number;
     base_price?: string | number;
     flash_sale_price?: string | number | null;
@@ -63,7 +64,6 @@ type Product = {
 
 type ProductShowProps = {
     product: Product;
-    slug: string;
     relatedProducts?: Product[];
     reviews?: Review[];
     ratingSummary?: RatingSummary | null;
@@ -233,7 +233,6 @@ const saveProductAction = (
 
 export default function ProductShow({
     product,
-    slug,
     relatedProducts = [],
     reviews = [],
     ratingSummary,
@@ -345,6 +344,7 @@ export default function ProductShow({
     function addToCart() {
         if (isOutOfStock) {
             showNotice('error', `${currentProduct.name} is out of stock.`);
+
             return;
         }
 
@@ -395,13 +395,22 @@ export default function ProductShow({
         );
     }, [currentProduct]);
 
-    useEffect(() => {
+    const [prevSizeQuantity, setPrevSizeQuantity] = useState(
+        selectedSizeQuantity,
+    );
+
+    if (selectedSizeQuantity !== prevSizeQuantity) {
+        setPrevSizeQuantity(selectedSizeQuantity);
         setQuantity((value) =>
             Math.min(Math.max(1, value), selectedSizeQuantity || 1),
         );
-    }, [selectedSizeQuantity]);
+    }
 
-    useEffect(() => {
+    const [prevSelectedSize, setPrevSelectedSize] = useState(selectedSize);
+
+    if (selectedSize !== prevSelectedSize) {
+        setPrevSelectedSize(selectedSize);
+
         if (
             currentProduct.variants &&
             currentProduct.variants.length > 0 &&
@@ -409,11 +418,16 @@ export default function ProductShow({
         ) {
             setSelectedColor(availableColors[0] ?? '');
         }
-    }, [availableColors, currentProduct.variants, selectedColor]);
+    }
 
-    useEffect(() => {
+    const imageResetKey = `${selectedSize}|${selectedColor}`;
+    const [prevImageResetKey, setPrevImageResetKey] =
+        useState(imageResetKey);
+
+    if (imageResetKey !== prevImageResetKey) {
+        setPrevImageResetKey(imageResetKey);
         setSelectedImageIndex(0);
-    }, [selectedSize, selectedColor]);
+    }
 
     return (
         <>
@@ -716,6 +730,14 @@ export default function ProductShow({
                                     {currentProduct.description ??
                                         'No product description has been added yet.'}
                                 </p>
+                                {currentProduct.fragrance_type && (
+                                    <p className="mt-3 text-sm">
+                                        Type:{' '}
+                                        <span className="font-semibold text-[#3b2147]">
+                                            {currentProduct.fragrance_type}
+                                        </span>
+                                    </p>
+                                )}
                             </div>
 
                             <div className="mt-7 border-t border-[#eee1dc] pt-5">

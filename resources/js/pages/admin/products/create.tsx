@@ -11,6 +11,8 @@ type Category = {
     name: string;
 };
 
+const FRAGRANCE_TYPES = ['EDP', 'EDT', 'Perfume', 'Pour Homme', 'Arabic'];
+
 type ProductVariant = {
     size: string;
     color: string;
@@ -33,6 +35,7 @@ export default function ProductCreate({
         slug: '',
         description: '',
         brand: '',
+        fragrance_type: '',
         original_price: '',
         price: '',
         flash_sale_price: '',
@@ -208,6 +211,37 @@ export default function ProductCreate({
                                         placeholder="Scented Muse"
                                     />
                                     <InputError message={errors.brand} />
+                                </div>
+                            </div>
+
+                            <div className="grid gap-5 md:grid-cols-2">
+                                <div className="space-y-2">
+                                    <Label htmlFor="fragrance_type">
+                                        Fragrance type
+                                    </Label>
+                                    <select
+                                        id="fragrance_type"
+                                        value={data.fragrance_type}
+                                        onChange={(event) =>
+                                            setData(
+                                                'fragrance_type',
+                                                event.target.value,
+                                            )
+                                        }
+                                        className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                                    >
+                                        <option value="">
+                                            Not applicable
+                                        </option>
+                                        {FRAGRANCE_TYPES.map((type) => (
+                                            <option key={type} value={type}>
+                                                {type}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <InputError
+                                        message={errors.fragrance_type}
+                                    />
                                 </div>
                             </div>
 

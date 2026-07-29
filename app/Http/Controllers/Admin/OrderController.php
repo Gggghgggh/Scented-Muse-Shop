@@ -93,7 +93,7 @@ class OrderController extends Controller
 
     public function update(Request $request, Order $order): RedirectResponse
     {
-        $data = $this->validatedData($request);
+        $data = $this->validatedData($request, $order);
 
         try {
             $order->update($data);
@@ -131,7 +131,10 @@ class OrderController extends Controller
         ]);
     }
 
-    private function validatedData(Request $request): array
+    /**
+     * @return array<string, mixed>
+     */
+    private function validatedData(Request $request, ?Order $order = null): array
     {
         $data = $request->validate([
             'user_id' => ['nullable', 'integer', 'exists:users,id'],
@@ -147,16 +150,18 @@ class OrderController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
+        $lines = isset($data['items']) ? preg_split('/\r\n|\r|\n/', $data['items']) : null;
+
         return [
             ...$data,
             'delivery_fee' => $data['delivery_fee'] ?? 0,
-            'items' => isset($data['items'])
-                ? collect(preg_split('/\r\n|\r|\n/', $data['items']))
+            'items' => $lines !== null
+                ? collect($lines === false ? [] : $lines)
                     ->filter()
                     ->map(fn (string $item) => ['name' => trim($item)])
                     ->values()
                     ->all()
-                : $request->route('order')?->items,
+                : $order?->items,
         ];
     }
 }

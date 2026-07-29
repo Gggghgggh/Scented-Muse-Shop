@@ -1,9 +1,10 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { CheckCircle, Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { kenyaLocations } from '@/lib/kenya-locations';
 import { CustomerNavbar } from '@/components/customer-navbar';
-import { getCartItems, type StoredCartItem } from '@/lib/shop-storage';
+import { kenyaLocations } from '@/lib/kenya-locations';
+import { getCartItems  } from '@/lib/shop-storage';
+import type {StoredCartItem} from '@/lib/shop-storage';
 import { login, register } from '@/routes';
 
 const formatPrice = (price: string | number) =>
@@ -110,11 +111,13 @@ export default function CartPage() {
     function placeOrder() {
         if (items.length === 0) {
             showNotice('error', 'Your cart is empty.');
+
             return;
         }
 
         if (!phone.trim()) {
             showNotice('error', 'Enter your phone number before checkout.');
+
             return;
         }
 
@@ -131,6 +134,7 @@ export default function CartPage() {
                     ? `${invalidItem.name} is currently out of stock.`
                     : `${invalidItem.name} has less stock than the quantity selected.`,
             );
+
             return;
         }
 

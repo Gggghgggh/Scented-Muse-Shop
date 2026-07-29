@@ -1,5 +1,5 @@
 import { Head, useForm } from '@inertiajs/react';
-import { Award, MapPin, Phone, Save } from 'lucide-react';
+import { Award, MapPin, MessageCircle, Phone, Save } from 'lucide-react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 type ShopSettings = {
     shop_location?: string | null;
     shop_phone?: string | null;
+    whatsapp_number?: string | null;
     shopping_points_percentage?: string | number | null;
 };
 
@@ -20,6 +21,7 @@ export default function ShopSettingsEdit({
     const { data, setData, put, processing, errors } = useForm({
         shop_location: settings.shop_location ?? '',
         shop_phone: settings.shop_phone ?? '',
+        whatsapp_number: settings.whatsapp_number ?? '',
         shopping_points_percentage: String(
             settings.shopping_points_percentage ?? 10,
         ),
@@ -99,6 +101,32 @@ export default function ShopSettingsEdit({
 
                             <div className="space-y-2">
                                 <Label
+                                    htmlFor="whatsapp_number"
+                                    className="flex items-center gap-2"
+                                >
+                                    <MessageCircle className="size-4" />
+                                    WhatsApp help number
+                                </Label>
+                                <Input
+                                    id="whatsapp_number"
+                                    value={data.whatsapp_number}
+                                    onChange={(event) =>
+                                        setData(
+                                            'whatsapp_number',
+                                            event.target.value,
+                                        )
+                                    }
+                                    placeholder="+254 700 000 000"
+                                />
+                                <InputError message={errors.whatsapp_number} />
+                                <p className="text-xs text-muted-foreground">
+                                    Used by the WhatsApp help button on the
+                                    homepage. Leave blank to hide the button.
+                                </p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label
                                     htmlFor="shopping_points_percentage"
                                     className="flex items-center gap-2"
                                 >
@@ -121,9 +149,7 @@ export default function ShopSettingsEdit({
                                     placeholder="10"
                                 />
                                 <InputError
-                                    message={
-                                        errors.shopping_points_percentage
-                                    }
+                                    message={errors.shopping_points_percentage}
                                 />
                             </div>
 

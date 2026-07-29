@@ -1,9 +1,9 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { Edit, Eye, Plus, Search, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import InputError from '@/components/input-error';
 import { AdminConfirmDialog } from '@/components/admin-confirm-dialog';
 import { AdminPagination } from '@/components/admin-pagination';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';

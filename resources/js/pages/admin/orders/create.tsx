@@ -26,6 +26,7 @@ export default function OrderCreate({ users }: { users: OrderFormUser[] }) {
         status: 'processing',
         notes: '',
     });
+
     return (
         <OrderForm
             title="Create order"
@@ -213,6 +214,7 @@ function Field({
     type?: string;
 }) {
     const id = label.toLowerCase().replaceAll(' ', '-');
+
     return (
         <div className="space-y-2">
             <Label htmlFor={id}>{label}</Label>

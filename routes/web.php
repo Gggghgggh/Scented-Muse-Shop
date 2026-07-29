@@ -1,13 +1,15 @@
 <?php
 
+use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\Admin\HeroSlideController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\ProductCategoryController;
 use App\Http\Controllers\Admin\ProductController;
-use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\ShopSettingController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\CheckoutController;
+use App\Models\HeroSlide;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Product;
@@ -31,6 +33,10 @@ $applyActiveFlashSaleWindow = function ($query) {
 };
 
 $shopProps = fn () => [
+    'heroSlides' => HeroSlide::query()
+        ->active()
+        ->ordered()
+        ->get(['id', 'image_path', 'eyebrow', 'heading', 'subheading']),
     'categories' => ProductCategory::query()
         ->where('is_active', true)
         ->withCount(['products' => fn ($query) => $query->where('is_active', true)])
@@ -91,7 +97,7 @@ Route::get('my-orders', fn (Request $request) => Inertia::render('orders', [
     ->middleware(['auth', 'verified'])
     ->name('orders.mine');
 Route::get('my-account', fn (Request $request) => Inertia::render('my-account', [
-    'orders' => \App\Models\Order::query()
+    'orders' => Order::query()
         ->where(fn ($query) => $query
             ->where('user_id', $request->user()->id)
             ->orWhere('customer_email', $request->user()->email))
@@ -112,26 +118,22 @@ Route::get('products/{slug}', function (string $slug) {
     return Inertia::render('products/show', [
         'product' => $product,
         'slug' => $slug,
-        'reviews' => $product
-            ? $product->reviews()
-                ->with('user:id,name')
-                ->latest()
-                ->limit(10)
-                ->get(['id', 'product_id', 'user_id', 'rating', 'title', 'body', 'is_verified_purchase', 'created_at'])
-            : [],
-        'ratingSummary' => $product
-            ? [
-                'average' => round((float) $product->reviews()->avg('rating'), 1),
-                'count' => $product->reviews()->count(),
-                'distribution' => collect(range(5, 1))->mapWithKeys(fn (int $rating) => [
-                    $rating => $product->reviews()->where('rating', $rating)->count(),
-                ]),
-            ]
-            : null,
+        'reviews' => $product->reviews()
+            ->with('user:id,name')
+            ->latest()
+            ->limit(10)
+            ->get(['id', 'product_id', 'user_id', 'rating', 'title', 'body', 'is_verified_purchase', 'created_at']),
+        'ratingSummary' => [
+            'average' => round((float) $product->reviews()->avg('rating'), 1),
+            'count' => $product->reviews()->count(),
+            'distribution' => collect(range(5, 1))->mapWithKeys(fn (int $rating) => [
+                $rating => $product->reviews()->where('rating', $rating)->count(),
+            ]),
+        ],
         'relatedProducts' => Product::query()
             ->with('category:id,name,slug')
             ->where('is_active', true)
-            ->when($product, fn ($query) => $query->whereKeyNot($product->id))
+            ->whereKeyNot($product->id)
             ->latest()
             ->limit(4)
             ->get(),
@@ -242,7 +244,7 @@ Route::middleware(['auth', 'verified'])->group(function () use ($shopProps) {
             ->get()
             ->map(fn (Payment $payment): array => [
                 'label' => ucfirst((string) $payment->status),
-                'value' => (int) $payment->count,
+                'value' => (int) $payment->getAttribute('count'),
             ])
             ->values();
 
@@ -254,7 +256,7 @@ Route::middleware(['auth', 'verified'])->group(function () use ($shopProps) {
         $paymentMethodBreakdown = $paymentMethods
             ->map(fn (Payment $payment): array => [
                 'label' => str((string) $payment->method)->replace('_', ' ')->title()->toString(),
-                'value' => round(((int) $payment->count / $paymentMethodTotal) * 100),
+                'value' => round(((int) $payment->getAttribute('count') / $paymentMethodTotal) * 100),
             ])
             ->values();
 
@@ -318,6 +320,7 @@ Route::middleware(['auth', 'verified'])->group(function () use ($shopProps) {
             Route::resource('users', UserController::class)->except('show');
             Route::resource('orders', OrderController::class)->except('show');
             Route::resource('payments', PaymentController::class)->except('show');
+            Route::resource('hero-slides', HeroSlideController::class)->except('show');
             Route::get('shop-settings', [ShopSettingController::class, 'edit'])->name('shop-settings.edit');
             Route::put('shop-settings', [ShopSettingController::class, 'update'])->name('shop-settings.update');
         });

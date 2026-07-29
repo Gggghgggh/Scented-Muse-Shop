@@ -25,6 +25,7 @@ class ShopSettingController extends Controller
         $data = $request->validate([
             'shop_location' => ['nullable', 'string', 'max:255'],
             'shop_phone' => ['nullable', 'string', 'max:80'],
+            'whatsapp_number' => ['nullable', 'string', 'max:40'],
             'shopping_points_percentage' => ['required', 'numeric', 'min:0', 'max:100'],
         ]);
 

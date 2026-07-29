@@ -11,6 +11,8 @@ type Category = {
     name: string;
 };
 
+const FRAGRANCE_TYPES = ['EDP', 'EDT', 'Perfume', 'Pour Homme', 'Arabic'];
+
 type Product = {
     id: number;
     product_category_id: number;
@@ -18,6 +20,7 @@ type Product = {
     slug: string;
     description: string;
     brand: string | null;
+    fragrance_type: string | null;
     price: string;
     original_price: string | null;
     discount_percentage: number | null;
@@ -75,6 +78,7 @@ export default function ProductEdit({
         slug: product.slug,
         description: product.description,
         brand: product.brand ?? '',
+        fragrance_type: product.fragrance_type ?? '',
         original_price: product.original_price ?? '',
         price: product.price,
         flash_sale_price: product.flash_sale_price ?? '',
@@ -306,6 +310,37 @@ export default function ProductEdit({
                                         }
                                     />
                                     <InputError message={errors.brand} />
+                                </div>
+                            </div>
+
+                            <div className="grid gap-5 md:grid-cols-2">
+                                <div className="space-y-2">
+                                    <Label htmlFor="fragrance_type">
+                                        Fragrance type
+                                    </Label>
+                                    <select
+                                        id="fragrance_type"
+                                        value={data.fragrance_type}
+                                        onChange={(event) =>
+                                            setData(
+                                                'fragrance_type',
+                                                event.target.value,
+                                            )
+                                        }
+                                        className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                                    >
+                                        <option value="">
+                                            Not applicable
+                                        </option>
+                                        {FRAGRANCE_TYPES.map((type) => (
+                                            <option key={type} value={type}>
+                                                {type}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <InputError
+                                        message={errors.fragrance_type}
+                                    />
                                 </div>
                             </div>
 

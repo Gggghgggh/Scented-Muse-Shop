@@ -1,5 +1,6 @@
 import { useForm } from '@inertiajs/react';
-import { PaymentForm, type PaymentFormOrder } from './create';
+import { PaymentForm  } from './create';
+import type {PaymentFormOrder} from './create';
 
 type Payment = {
     id: number;

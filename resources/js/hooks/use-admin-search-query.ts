@@ -16,6 +16,7 @@ export function useAdminServerSearch(url: string, only: string[]) {
     useEffect(() => {
         if (isFirstRun.current) {
             isFirstRun.current = false;
+
             return;
         }
 

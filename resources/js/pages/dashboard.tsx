@@ -1,6 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import {
-    Boxes,
     CreditCard,
     Heart,
     Menu,
@@ -108,7 +107,6 @@ export default function Dashboard({
 
     return auth.user.is_admin ? (
         <AdminDashboard
-            user={auth.user}
             activeCategoryCount={activeCategoryCount}
             adminStats={
                 adminStats ?? {
@@ -137,11 +135,9 @@ Dashboard.layout = {
 };
 
 function AdminDashboard({
-    user,
     activeCategoryCount,
     adminStats,
 }: {
-    user: AuthUser;
     activeCategoryCount: number;
     adminStats: NonNullable<DashboardProps['adminStats']>;
 }) {
@@ -798,11 +794,22 @@ function DonutChart({
 }) {
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
     const total = data.reduce((sum, item) => sum + item.value, 0);
+
     if (data.length === 0 || total === 0) {
         return <EmptyChart message="No payment status data yet." />;
     }
 
-    let offset = 25;
+    const strokeOffsets = data.reduce<{ offsets: number[]; cumulative: number }>(
+        (accumulated, item) => {
+            const percent = (item.value / total) * 100;
+
+            return {
+                offsets: [...accumulated.offsets, accumulated.cumulative],
+                cumulative: accumulated.cumulative - percent,
+            };
+        },
+        { offsets: [], cumulative: 25 },
+    ).offsets;
 
     return (
         <div className="grid items-center gap-5 sm:grid-cols-[180px_1fr] xl:grid-cols-1 2xl:grid-cols-[180px_1fr]">
@@ -812,7 +819,8 @@ function DonutChart({
                     const percent = (item.value / total) * 100;
                     const isHovered = hoveredIndex === index;
                     const isDimmed = hoveredIndex !== null && hoveredIndex !== index;
-                    const circle = (
+
+                    return (
                         <circle
                             key={item.label}
                             cx="21"
@@ -821,7 +829,7 @@ function DonutChart({
                             fill="transparent"
                             stroke={item.color}
                             strokeDasharray={`${percent} ${100 - percent}`}
-                            strokeDashoffset={offset}
+                            strokeDashoffset={strokeOffsets[index]}
                             strokeWidth={isHovered ? '7.5' : '6'}
                             opacity={isDimmed ? 0.28 : 1}
                             className="cursor-pointer transition-all duration-200"
@@ -829,8 +837,6 @@ function DonutChart({
                             onMouseLeave={() => setHoveredIndex(null)}
                         />
                     );
-                    offset -= percent;
-                    return circle;
                 })}
             </svg>
             <div className="space-y-3">

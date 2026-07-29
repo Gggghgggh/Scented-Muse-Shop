@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -14,6 +15,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use RuntimeException;
 use Throwable;
 
 class ProductController extends Controller
@@ -134,7 +136,7 @@ class ProductController extends Controller
     }
 
     /**
-     * @return array<int, array{id: int, name: string}>
+     * @return array<int, ProductCategory>
      */
     private function categoriesForSelect(): array
     {
@@ -152,6 +154,7 @@ class ProductController extends Controller
      *     slug: string,
      *     description: string,
      *     brand: string|null,
+     *     fragrance_type: string|null,
      *     price: numeric,
      *     flash_sale_price: numeric|null,
      *     original_price: numeric|null,
@@ -183,6 +186,7 @@ class ProductController extends Controller
             ],
             'description' => ['required', 'string'],
             'brand' => ['nullable', 'string', 'max:120'],
+            'fragrance_type' => ['nullable', 'string', Rule::in(['EDP', 'EDT', 'Perfume', 'Pour Homme', 'Arabic'])],
             'price' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'flash_sale_price' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'original_price' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
@@ -225,7 +229,7 @@ class ProductController extends Controller
             ? (float) $data['flash_sale_price']
             : null;
 
-        $variants = collect($data['variants'] ?? [])
+        $variants = collect($this->toArrayList($data['variants'] ?? []))
             ->map(function (array $variant, int $index) use ($request, $fallbackPrice, $fallbackFlashSalePrice): array {
                 $size = trim((string) ($variant['size'] ?? ''));
                 $color = trim((string) ($variant['color'] ?? ''));
@@ -245,7 +249,7 @@ class ProductController extends Controller
                 );
 
                 $photoPaths = $this->storeUploadedVariantPhotos($request, $index);
-                $existingPhotoPaths = collect($variant['photo_paths'] ?? [])
+                $existingPhotoPaths = collect($this->toStringList($variant['photo_paths'] ?? []))
                     ->filter()
                     ->values()
                     ->all();
@@ -296,14 +300,14 @@ class ProductController extends Controller
 
         $sizes = $variants->isNotEmpty()
             ? $variants->pluck('size')->unique()->values()
-            : collect($data['sizes'] ?? [])
+            : collect($this->toStringList($data['sizes'] ?? []))
                 ->map(fn (?string $size) => trim((string) $size))
                 ->filter()
                 ->unique()
                 ->values();
         $colors = $variants->isNotEmpty()
             ? $variants->pluck('color')->filter()->unique()->values()->all()
-            : collect($data['colors'] ?? [])
+            : collect($this->toStringList($data['colors'] ?? []))
                 ->map(fn (?string $color) => trim((string) $color))
                 ->filter()
                 ->unique()
@@ -376,6 +380,7 @@ class ProductController extends Controller
             'slug' => Str::slug($slug),
             'description' => $data['description'],
             'brand' => $data['brand'] ?? null,
+            'fragrance_type' => $data['fragrance_type'] ?? null,
             'price' => $price,
             'flash_sale_price' => (bool) ($data['is_flash_sale'] ?? false)
                 ? $flashSalePrice
@@ -405,13 +410,18 @@ class ProductController extends Controller
         $files = [];
 
         if ($request->hasFile('photos')) {
-            $files = $request->file('photos');
+            $files = $request->file('photos', []);
+
+            if (! is_array($files)) {
+                $files = [$files];
+            }
         } elseif ($request->hasFile('photo')) {
             $files = [$request->file('photo')];
         }
 
         return collect($files)
-            ->map(fn ($file) => $file->store('products', 'public'))
+            ->filter()
+            ->map(fn (UploadedFile $file) => $this->storeOrFail($file, 'products'))
             ->values()
             ->all();
     }
@@ -429,9 +439,44 @@ class ProductController extends Controller
 
         return collect($files)
             ->filter()
-            ->map(fn ($file) => $file->store('products/variants', 'public'))
+            ->map(fn (UploadedFile $file) => $this->storeOrFail($file, 'products/variants'))
             ->values()
             ->all();
+    }
+
+    private function storeOrFail(UploadedFile $file, string $directory): string
+    {
+        $path = $file->store($directory, 'public');
+
+        if ($path === false) {
+            throw new RuntimeException("Failed to store uploaded file in \"{$directory}\".");
+        }
+
+        return $path;
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function toArrayList(mixed $value): array
+    {
+        if (! is_array($value)) {
+            return [];
+        }
+
+        return array_values(array_filter($value, 'is_array'));
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function toStringList(mixed $value): array
+    {
+        if (! is_array($value)) {
+            return [];
+        }
+
+        return array_values(array_filter($value, 'is_string'));
     }
 
     /**

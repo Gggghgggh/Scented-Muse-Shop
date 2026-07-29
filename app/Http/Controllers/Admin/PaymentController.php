@@ -117,6 +117,9 @@ class PaymentController extends Controller
         ]);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function validatedData(Request $request): array
     {
         return $request->validate([

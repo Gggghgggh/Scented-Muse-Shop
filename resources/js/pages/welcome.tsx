@@ -11,7 +11,6 @@ import {
     Linkedin,
     Menu,
     Search,
-    Send,
     ShoppingCart,
     Tags,
     Twitter,
@@ -20,13 +19,15 @@ import {
     Youtube,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import HeroIllustration from '@/components/hero-illustration';
+import { HeroSlideshow } from '@/components/hero-slideshow';
+import type { HeroSlide } from '@/components/hero-slideshow';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { UserMenuContent } from '@/components/user-menu-content';
+import WhatsAppIcon from '@/components/whatsapp-icon';
 import { getCartSummary } from '@/lib/shop-storage';
 import { login, register } from '@/routes';
 import type { User } from '@/types';
@@ -64,6 +65,7 @@ type Product = {
 };
 
 type WelcomeProps = {
+    heroSlides?: HeroSlide[];
     categories?: Category[];
     products?: Product[];
     flashSaleProducts?: Product[];
@@ -72,6 +74,7 @@ type WelcomeProps = {
 type SharedShopSettings = {
     shop_location?: string | null;
     shop_phone?: string | null;
+    whatsapp_number?: string | null;
 };
 
 const formatPrice = (price: string | number) =>
@@ -102,6 +105,37 @@ const getDisplayPrice = (product: Product) =>
     product.is_flash_sale_active && product.flash_sale_price
         ? product.flash_sale_price
         : product.price;
+
+const getWhatsAppLink = (whatsappNumber: string) =>
+    `https://wa.me/${whatsappNumber.replace(/\D/g, '')}`;
+
+const getInitialUrlState = () => {
+    const query = new URLSearchParams(window.location.search);
+
+    return {
+        search: query.get('search') ?? '',
+        showAllProducts: query.get('show') === 'all-products',
+    };
+};
+
+const readRecentlyViewed = (hasUser: boolean): Product[] =>
+    hasUser
+        ? (
+              JSON.parse(
+                  localStorage.getItem('hod_recently_viewed') ?? '[]',
+              ) as Product[]
+          ).slice(0, 6)
+        : [];
+
+const formatCountdown = (remainingMs: number) => {
+    const hours = Math.floor(remainingMs / 3_600_000);
+    const minutes = Math.floor((remainingMs % 3_600_000) / 60_000);
+    const seconds = Math.floor((remainingMs % 60_000) / 1000);
+
+    return `${hours.toString().padStart(2, '0')}h : ${minutes
+        .toString()
+        .padStart(2, '0')}m : ${seconds.toString().padStart(2, '0')}s`;
+};
 
 const saveProductAction = (
     key: 'hod_cart' | 'hod_wishlist',
@@ -139,6 +173,7 @@ const saveProductAction = (
 };
 
 export default function Welcome({
+    heroSlides = [],
     categories = [],
     products = [],
     flashSaleProducts = [],
@@ -151,13 +186,21 @@ export default function Welcome({
         string | null
     >(null);
     const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
-    const [isShowingAllProducts, setIsShowingAllProducts] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [submittedSearchQuery, setSubmittedSearchQuery] = useState('');
+    const [isShowingAllProducts, setIsShowingAllProducts] = useState(
+        () =>
+            !getInitialUrlState().search &&
+            getInitialUrlState().showAllProducts,
+    );
+    const [searchQuery, setSearchQuery] = useState(
+        () => getInitialUrlState().search,
+    );
+    const [submittedSearchQuery, setSubmittedSearchQuery] = useState(
+        () => getInitialUrlState().search,
+    );
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [recentlyViewedProducts, setRecentlyViewedProducts] = useState<
         Product[]
-    >([]);
+    >(() => readRecentlyViewed(Boolean(auth.user)));
     const [cartSummary, setCartSummary] = useState({ count: 0, total: 0 });
     const [notice, setNotice] = useState<{
         type: 'success' | 'error';
@@ -180,7 +223,9 @@ export default function Welcome({
         )
         .filter((value): value is number => Boolean(value))
         .sort((a, b) => a - b)[0];
-    const [timeLeft, setTimeLeft] = useState('');
+    const [timeLeft, setTimeLeft] = useState(() =>
+        dealEndsAt ? formatCountdown(Math.max(0, dealEndsAt - Date.now())) : '',
+    );
     const selectedCategory = activeCategories.find(
         (category) => category.slug === selectedCategorySlug,
     );
@@ -200,40 +245,17 @@ export default function Welcome({
           )
         : [];
 
-    useEffect(() => {
-        if (!auth.user) {
-            setRecentlyViewedProducts([]);
+    const [prevAuthUser, setPrevAuthUser] = useState(auth.user);
 
-            return;
-        }
-
-        setRecentlyViewedProducts(
-            (
-                JSON.parse(
-                    localStorage.getItem('hod_recently_viewed') ?? '[]',
-                ) as Product[]
-            ).slice(0, 6),
-        );
-    }, [auth.user]);
+    if (auth.user !== prevAuthUser) {
+        setPrevAuthUser(auth.user);
+        setRecentlyViewedProducts(readRecentlyViewed(Boolean(auth.user)));
+    }
 
     useEffect(() => {
-        const query = new URLSearchParams(window.location.search);
-        const initialSearch = query.get('search');
-        const shouldShowAllProducts = query.get('show') === 'all-products';
+        const { search, showAllProducts } = getInitialUrlState();
 
-        if (initialSearch) {
-            setSearchQuery(initialSearch);
-            setSubmittedSearchQuery(initialSearch);
-            setSelectedCategorySlug(null);
-            setIsShowingAllProducts(false);
-            window.setTimeout(() => {
-                document.getElementById('category-products')?.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start',
-                });
-            }, 0);
-        } else if (shouldShowAllProducts) {
-            setIsShowingAllProducts(true);
+        if (search || showAllProducts) {
             window.setTimeout(() => {
                 document.getElementById('category-products')?.scrollIntoView({
                     behavior: 'smooth',
@@ -253,31 +275,26 @@ export default function Welcome({
     }, []);
 
     useEffect(() => {
-        if (!dealEndsAt) {
-            setTimeLeft('');
-
-            return;
-        }
-
-        const refreshTime = () => {
-            const remaining = Math.max(0, dealEndsAt - Date.now());
-            const hours = Math.floor(remaining / 3_600_000);
-            const minutes = Math.floor((remaining % 3_600_000) / 60_000);
-            const seconds = Math.floor((remaining % 60_000) / 1000);
-
+        const tick = () => {
             setTimeLeft(
-                `${hours.toString().padStart(2, '0')}h : ${minutes
-                    .toString()
-                    .padStart(2, '0')}m : ${seconds
-                    .toString()
-                    .padStart(2, '0')}s`,
+                dealEndsAt
+                    ? formatCountdown(Math.max(0, dealEndsAt - Date.now()))
+                    : '',
             );
         };
 
-        refreshTime();
-        const interval = window.setInterval(refreshTime, 1000);
+        const resync = window.setTimeout(tick, 0);
+        const interval = dealEndsAt
+            ? window.setInterval(tick, 1000)
+            : undefined;
 
-        return () => window.clearInterval(interval);
+        return () => {
+            window.clearTimeout(resync);
+
+            if (interval) {
+                window.clearInterval(interval);
+            }
+        };
     }, [dealEndsAt]);
 
     function showNotice(type: 'success' | 'error', message: string) {
@@ -644,30 +661,7 @@ export default function Welcome({
                 <section className="mx-auto max-w-[1540px] px-2 py-3 sm:px-4 lg:px-8 lg:py-7">
                     <div>
                         <div className="relative hidden h-[300px] overflow-hidden rounded-md bg-[#f5e5dc] sm:h-[340px] lg:block lg:h-[392px]">
-                            <HeroIllustration
-                                role="img"
-                                aria-label="Scented Muse perfumes, deodorants, watches and body care"
-                                className="absolute inset-0 h-full w-full"
-                            />
-                            <div className="absolute inset-0 bg-white/42" />
-                            <div className="relative flex h-full max-w-xl flex-col justify-center px-5 sm:px-8 md:px-14">
-                                <p className="mb-2 text-sm font-bold text-[#c7984a] sm:mb-3 sm:text-lg">
-                                    Curated by Scented Muse
-                                </p>
-                                <h1 className="text-3xl leading-tight font-black text-[#3b2147] sm:text-5xl md:text-6xl">
-                                    Soft living, sharp style.
-                                </h1>
-                                <p className="mt-3 max-w-md text-sm font-semibold text-[#273244] sm:mt-4 sm:text-base">
-                                    Shop perfumes, deodorants, watches, body
-                                    wash, body spray and body splash.
-                                </p>
-                                <a
-                                    href="#featured-products"
-                                    className="mt-5 inline-flex w-fit items-center bg-[#e85d4f] px-7 py-2.5 text-sm font-black text-white shadow-xl shadow-[#e85d4f]/25 transition hover:-translate-y-0.5 hover:bg-[#3b2147] sm:mt-7 sm:px-10 sm:py-3 sm:text-lg"
-                                >
-                                    SHOP NOW
-                                </a>
-                            </div>
+                            <HeroSlideshow slides={heroSlides} />
                         </div>
                     </div>
 
@@ -930,8 +924,7 @@ export default function Welcome({
                                     'Online Ecommerce Shopping'}
                             </p>
                             <p className="mt-2 text-sm font-semibold">
-                                {shopSettings?.shop_phone ||
-                                    '+254 700 000 000'}
+                                {shopSettings?.shop_phone || '+254 700 000 000'}
                             </p>
                         </div>
                     </div>
@@ -940,15 +933,17 @@ export default function Welcome({
                     </div>
                 </footer>
 
-                <button
-                    className="fixed bottom-4 left-4 z-30 hidden size-12 items-center justify-center rounded-full bg-[#e85d4f] text-white shadow-2xl shadow-[#e85d4f]/25 transition hover:-translate-y-1 hover:bg-[#3b2147] sm:bottom-6 sm:left-6 sm:flex sm:size-16"
-                    aria-label="Contact support"
-                >
-                    <Send className="size-5 sm:size-7" />
-                    <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-[#d71920] text-xs font-bold sm:size-6">
-                        1
-                    </span>
-                </button>
+                {shopSettings?.whatsapp_number && (
+                    <a
+                        href={getWhatsAppLink(shopSettings.whatsapp_number)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="fixed bottom-4 left-4 z-30 hidden size-12 items-center justify-center rounded-full bg-[#25d366] text-white shadow-2xl shadow-[#25d366]/25 transition hover:-translate-y-1 hover:bg-[#1ebe57] sm:bottom-6 sm:left-6 sm:flex sm:size-16"
+                        aria-label="Chat with us on WhatsApp"
+                    >
+                        <WhatsAppIcon className="size-6 sm:size-8" />
+                    </a>
+                )}
 
                 <button
                     type="button"
@@ -1129,6 +1124,7 @@ function ProductCard({
                                 'error',
                                 `${product.name} is out of stock.`,
                             );
+
                             return;
                         }
 

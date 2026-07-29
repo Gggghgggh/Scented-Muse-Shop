@@ -8,14 +8,41 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * @property int $id
+ * @property int $product_category_id
+ * @property string $name
+ * @property string $slug
+ * @property string $description
+ * @property string|null $brand
+ * @property string|null $fragrance_type
+ * @property string $price
+ * @property string|null $flash_sale_price
+ * @property string|null $original_price
+ * @property int|null $discount_percentage
+ * @property int $stock_quantity
+ * @property array<int, string>|null $sizes
+ * @property array<string, numeric>|null $size_prices
+ * @property array<string, int>|null $size_quantities
+ * @property array<int, string>|null $colors
+ * @property array<int, array<string, mixed>>|null $variants
+ * @property string|null $photo_path
+ * @property array<int, string>|null $photo_paths
+ * @property bool $is_active
+ * @property bool $is_flash_sale
+ * @property Carbon|null $flash_sale_ends_at
+ * @property array<string, int>|null $flash_sale_size_quantities
+ */
 #[Fillable([
     'product_category_id',
     'name',
     'slug',
     'description',
     'brand',
+    'fragrance_type',
     'price',
     'flash_sale_price',
     'original_price',

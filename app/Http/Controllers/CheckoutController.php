@@ -9,6 +9,7 @@ use App\Models\ShopSetting;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -113,7 +114,7 @@ class CheckoutController extends Controller
         ]);
     }
 
-    public function receipt(Request $request, Order $order)
+    public function receipt(Request $request, Order $order): Response
     {
         $user = $request->user();
         $ownsOrder = (int) $order->user_id === (int) $user->id
@@ -167,10 +168,10 @@ class CheckoutController extends Controller
         }
 
         $product->variants = $variants;
-        $product->stock_quantity = collect($variants)->sum(fn (array $variant): int => (int) ($variant['quantity'] ?? 0));
+        $product->stock_quantity = collect($variants)->sum(fn (array $variant): int => (int) $variant['quantity']);
         $product->size_quantities = collect($variants)
             ->groupBy('size')
-            ->map(fn ($items): int => collect($items)->sum(fn (array $variant): int => (int) ($variant['quantity'] ?? 0)))
+            ->map(fn ($items): int => collect($items)->sum(fn (array $variant): int => (int) $variant['quantity']))
             ->all();
         $product->save();
     }
@@ -188,6 +189,10 @@ class CheckoutController extends Controller
     private function receiptData(Order $order): array
     {
         $payment = $order->payments()->latest()->first();
+        $paymentNumber = $payment !== null ? $payment->payment_number : null;
+        $paymentStatus = $payment !== null ? $payment->status : null;
+        $paymentMethod = $payment !== null ? $payment->method : null;
+        $paymentReference = $payment !== null ? $payment->transaction_reference : null;
         $settings = ShopSetting::current();
         $items = collect($order->items ?? [])->map(function (array $item): array {
             $unitPrice = (float) ($item['unit_price'] ?? 0);
@@ -218,9 +223,9 @@ class CheckoutController extends Controller
                 'phone' => $settings->shop_phone ?: '+254 700 000 000',
             ],
             'receipt' => [
-                'number' => $payment?->payment_number ?? $order->order_number,
+                'number' => $paymentNumber ?? $order->order_number,
                 'date' => $order->created_at->format('d M Y, g:i A'),
-                'status' => $payment?->status ?? $order->status,
+                'status' => $paymentStatus ?? $order->status,
             ],
             'customer' => [
                 'name' => $order->customer_name,
@@ -236,8 +241,8 @@ class CheckoutController extends Controller
                 'total' => (float) $order->total_amount,
             ],
             'payment' => [
-                'method' => Str::headline($payment?->method ?? 'cash_on_delivery'),
-                'reference' => $payment?->transaction_reference ?? $payment?->payment_number ?? 'Pending',
+                'method' => Str::headline($paymentMethod ?? 'cash_on_delivery'),
+                'reference' => $paymentReference ?? $paymentNumber ?? 'Pending',
             ],
         ];
     }

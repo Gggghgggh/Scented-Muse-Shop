@@ -1,6 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
     CreditCard,
+    Images,
     LayoutGrid,
     Package,
     Settings,
@@ -58,6 +59,11 @@ const mainNavItems: NavItem[] = [
         title: 'Payments',
         href: '/admin/payments',
         icon: CreditCard,
+    },
+    {
+        title: 'Hero Slides',
+        href: '/admin/hero-slides',
+        icon: Images,
     },
     {
         title: 'Shop Settings',
