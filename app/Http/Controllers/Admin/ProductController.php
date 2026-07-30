@@ -489,9 +489,22 @@ class ProductController extends Controller
     {
         return collect($paths)
             ->filter()
-            ->map(fn (string $path) => asset($path))
+            ->map(fn (string $path) => $this->publicImageUrl($path))
             ->values()
             ->all();
+    }
+
+    private function publicImageUrl(string $path): string
+    {
+        if (str_starts_with($path, 'uploads/')) {
+            return asset($path);
+        }
+
+        if (file_exists(public_path('uploads/'.$path))) {
+            return asset('uploads/'.$path);
+        }
+
+        return asset('storage/'.$path);
     }
 
     private function deleteProductPhotos(Product $product): void
