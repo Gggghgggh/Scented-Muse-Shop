@@ -1,0 +1,1 @@
+var e=()=>JSON.parse(localStorage.getItem(`hod_cart`)??`[]`),t=()=>{let t=e();return{count:t.reduce((e,t)=>e+(t.quantity??1),0),total:t.reduce((e,t)=>e+Number(t.price)*(t.quantity??1),0)}};export{t as n,e as t};
