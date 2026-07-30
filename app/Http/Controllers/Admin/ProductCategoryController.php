@@ -7,7 +7,6 @@ use App\Models\ProductCategory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -100,8 +99,12 @@ class ProductCategoryController extends Controller
                     $paths = [$product->photo_path];
                 }
 
-                if ($paths !== []) {
-                    Storage::disk('public')->delete($paths);
+                foreach ($paths as $path) {
+                    $file = public_path($path);
+
+                    if (file_exists($file)) {
+                        unlink($file);
+                    }
                 }
             });
 

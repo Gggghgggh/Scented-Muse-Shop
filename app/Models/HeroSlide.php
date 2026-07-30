@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * @property int $id
@@ -37,7 +36,7 @@ class HeroSlide extends Model
 
     public function getImageUrlAttribute(): string
     {
-        return Storage::disk('public')->url($this->image_path);
+        return asset($this->image_path);
     }
 
     /**

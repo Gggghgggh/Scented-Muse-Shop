@@ -9,7 +9,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -446,13 +445,16 @@ class ProductController extends Controller
 
     private function storeOrFail(UploadedFile $file, string $directory): string
     {
-        $path = $file->store($directory, 'public');
+        $targetDirectory = public_path('uploads/'.$directory);
 
-        if ($path === false) {
-            throw new RuntimeException("Failed to store uploaded file in \"{$directory}\".");
+        if (! is_dir($targetDirectory) && ! mkdir($targetDirectory, 0755, true) && ! is_dir($targetDirectory)) {
+            throw new RuntimeException("Failed to create upload directory \"{$directory}\".");
         }
 
-        return $path;
+        $filename = uniqid().'_'.$file->getClientOriginalName();
+        $file->move($targetDirectory, $filename);
+
+        return 'uploads/'.$directory.'/'.$filename;
     }
 
     /**
@@ -487,7 +489,7 @@ class ProductController extends Controller
     {
         return collect($paths)
             ->filter()
-            ->map(fn (string $path) => Storage::disk('public')->url($path))
+            ->map(fn (string $path) => asset($path))
             ->values()
             ->all();
     }
@@ -503,18 +505,14 @@ class ProductController extends Controller
             ];
         }
 
-        if ($paths !== []) {
-            Storage::disk('public')->delete($paths);
-        }
+        $this->deletePublicFiles($paths);
     }
 
     private function deleteProductMainPhotos(Product $product): void
     {
         $paths = $this->productMainPhotoPaths($product);
 
-        if ($paths !== []) {
-            Storage::disk('public')->delete($paths);
-        }
+        $this->deletePublicFiles($paths);
     }
 
     /**
@@ -529,5 +527,19 @@ class ProductController extends Controller
         }
 
         return $paths;
+    }
+
+    /**
+     * @param  array<int, string>  $paths
+     */
+    private function deletePublicFiles(array $paths): void
+    {
+        foreach ($paths as $path) {
+            $file = public_path($path);
+
+            if (file_exists($file)) {
+                unlink($file);
+            }
+        }
     }
 }

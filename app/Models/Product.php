@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * @property int $id
@@ -119,7 +118,7 @@ class Product extends Model
     {
         $firstPhotoPath = $this->photo_paths[0] ?? $this->photo_path;
 
-        return $firstPhotoPath ? Storage::disk('public')->url($firstPhotoPath) : null;
+        return $firstPhotoPath ? asset($firstPhotoPath) : null;
     }
 
     /**
@@ -135,7 +134,7 @@ class Product extends Model
 
         return collect($paths)
             ->filter()
-            ->map(fn (string $path) => Storage::disk('public')->url($path))
+            ->map(fn (string $path) => asset($path))
             ->values()
             ->all();
     }
