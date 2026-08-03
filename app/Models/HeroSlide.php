@@ -36,15 +36,7 @@ class HeroSlide extends Model
 
     public function getImageUrlAttribute(): string
     {
-        if (str_starts_with($this->image_path, 'uploads/')) {
-            return asset($this->image_path);
-        }
-
-        if (file_exists(public_path('uploads/'.$this->image_path))) {
-            return asset('uploads/'.$this->image_path);
-        }
-
-        return asset('storage/'.$this->image_path);
+        return asset($this->image_path);
     }
 
     /**

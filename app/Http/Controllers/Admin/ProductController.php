@@ -8,6 +8,7 @@ use App\Models\ProductCategory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -249,6 +250,7 @@ class ProductController extends Controller
 
                 $photoPaths = $this->storeUploadedVariantPhotos($request, $index);
                 $existingPhotoPaths = collect($this->toStringList($variant['photo_paths'] ?? []))
+                    ->map(fn (string $path) => $this->normalizeUploadPath($path))
                     ->filter()
                     ->values()
                     ->all();
@@ -447,7 +449,7 @@ class ProductController extends Controller
     {
         $targetDirectory = public_path('uploads/'.$directory);
 
-        if (! is_dir($targetDirectory) && ! mkdir($targetDirectory, 0755, true) && ! is_dir($targetDirectory)) {
+        if (! File::exists($targetDirectory) && ! File::makeDirectory($targetDirectory, 0755, true)) {
             throw new RuntimeException("Failed to create upload directory \"{$directory}\".");
         }
 
@@ -489,22 +491,18 @@ class ProductController extends Controller
     {
         return collect($paths)
             ->filter()
-            ->map(fn (string $path) => $this->publicImageUrl($path))
+            ->map(fn (string $path) => asset($this->normalizeUploadPath($path)))
             ->values()
             ->all();
     }
 
-    private function publicImageUrl(string $path): string
+    private function normalizeUploadPath(string $path): string
     {
         if (str_starts_with($path, 'uploads/')) {
-            return asset($path);
+            return $path;
         }
 
-        if (file_exists(public_path('uploads/'.$path))) {
-            return asset('uploads/'.$path);
-        }
-
-        return asset('storage/'.$path);
+        return 'uploads/'.$path;
     }
 
     private function deleteProductPhotos(Product $product): void
@@ -548,10 +546,10 @@ class ProductController extends Controller
     private function deletePublicFiles(array $paths): void
     {
         foreach ($paths as $path) {
-            $file = public_path($path);
+            $file = public_path($this->normalizeUploadPath($path));
 
-            if (file_exists($file)) {
-                unlink($file);
+            if (File::exists($file)) {
+                File::delete($file);
             }
         }
     }

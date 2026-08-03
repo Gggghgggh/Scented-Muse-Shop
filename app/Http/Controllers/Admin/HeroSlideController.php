@@ -7,6 +7,7 @@ use App\Models\HeroSlide;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -136,7 +137,7 @@ class HeroSlideController extends Controller
 
         $directory = public_path('uploads/hero-slides');
 
-        if (! is_dir($directory) && ! mkdir($directory, 0755, true) && ! is_dir($directory)) {
+        if (! File::exists($directory) && ! File::makeDirectory($directory, 0755, true)) {
             throw new RuntimeException('Failed to create hero slide upload directory.');
         }
 
@@ -150,8 +151,8 @@ class HeroSlideController extends Controller
     {
         $file = public_path($path);
 
-        if (file_exists($file)) {
-            unlink($file);
+        if (File::exists($file)) {
+            File::delete($file);
         }
     }
 }

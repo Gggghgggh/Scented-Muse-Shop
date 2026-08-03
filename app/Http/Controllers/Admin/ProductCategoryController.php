@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ProductCategory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -99,11 +100,18 @@ class ProductCategoryController extends Controller
                     $paths = [$product->photo_path];
                 }
 
-                foreach ($paths as $path) {
-                    $file = public_path($path);
+                foreach ($product->variants ?? [] as $variant) {
+                    $paths = [
+                        ...$paths,
+                        ...($variant['photo_paths'] ?? []),
+                    ];
+                }
 
-                    if (file_exists($file)) {
-                        unlink($file);
+                foreach ($paths as $path) {
+                    $file = public_path(str_starts_with($path, 'uploads/') ? $path : 'uploads/'.$path);
+
+                    if (File::exists($file)) {
+                        File::delete($file);
                     }
                 }
             });
