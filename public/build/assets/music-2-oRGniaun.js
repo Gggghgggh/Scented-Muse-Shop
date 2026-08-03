@@ -1,0 +1,1 @@
+import{n as e}from"./jsx-runtime-DxMPxMw_.js";var t=e(`Facebook`,[[`path`,{d:`M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z`,key:`1jg4f8`}]]),n=e(`Music2`,[[`circle`,{cx:`8`,cy:`18`,r:`4`,key:`1fc0mg`}],[`path`,{d:`M12 18V2l7 4`,key:`g04rme`}]]);export{t as n,n as t};
