@@ -9,7 +9,7 @@ export type HeroSlide = {
     subheading: string | null;
 };
 
-const SLIDE_INTERVAL_MS = 5000;
+const SLIDE_INTERVAL_MS = 4000;
 
 export function HeroSlideshow({ slides }: { slides: HeroSlide[] }) {
     const [activeIndex, setActiveIndex] = useState(0);

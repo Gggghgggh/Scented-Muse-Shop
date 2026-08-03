@@ -1,5 +1,13 @@
 import { Head, useForm } from '@inertiajs/react';
-import { Award, MapPin, MessageCircle, Phone, Save } from 'lucide-react';
+import {
+    Award,
+    Facebook,
+    MapPin,
+    MessageCircle,
+    Music2,
+    Phone,
+    Save,
+} from 'lucide-react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +18,9 @@ type ShopSettings = {
     shop_location?: string | null;
     shop_phone?: string | null;
     whatsapp_number?: string | null;
+    whatsapp_url?: string | null;
+    tiktok_url?: string | null;
+    facebook_url?: string | null;
     shopping_points_percentage?: string | number | null;
 };
 
@@ -22,6 +33,9 @@ export default function ShopSettingsEdit({
         shop_location: settings.shop_location ?? '',
         shop_phone: settings.shop_phone ?? '',
         whatsapp_number: settings.whatsapp_number ?? '',
+        whatsapp_url: settings.whatsapp_url ?? '',
+        tiktok_url: settings.tiktok_url ?? '',
+        facebook_url: settings.facebook_url ?? '',
         shopping_points_percentage: String(
             settings.shopping_points_percentage ?? 10,
         ),
@@ -123,6 +137,77 @@ export default function ShopSettingsEdit({
                                     Used by the WhatsApp help button on the
                                     homepage. Leave blank to hide the button.
                                 </p>
+                            </div>
+
+                            <div className="grid gap-5 border-t pt-5 md:grid-cols-3">
+                                <div className="space-y-2">
+                                    <Label
+                                        htmlFor="whatsapp_url"
+                                        className="flex items-center gap-2"
+                                    >
+                                        <MessageCircle className="size-4" />
+                                        WhatsApp link
+                                    </Label>
+                                    <Input
+                                        id="whatsapp_url"
+                                        type="url"
+                                        value={data.whatsapp_url}
+                                        onChange={(event) =>
+                                            setData(
+                                                'whatsapp_url',
+                                                event.target.value,
+                                            )
+                                        }
+                                        placeholder="https://wa.me/254700000000"
+                                    />
+                                    <InputError message={errors.whatsapp_url} />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label
+                                        htmlFor="tiktok_url"
+                                        className="flex items-center gap-2"
+                                    >
+                                        <Music2 className="size-4" />
+                                        TikTok link
+                                    </Label>
+                                    <Input
+                                        id="tiktok_url"
+                                        type="url"
+                                        value={data.tiktok_url}
+                                        onChange={(event) =>
+                                            setData(
+                                                'tiktok_url',
+                                                event.target.value,
+                                            )
+                                        }
+                                        placeholder="https://www.tiktok.com/@scentedmuse"
+                                    />
+                                    <InputError message={errors.tiktok_url} />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label
+                                        htmlFor="facebook_url"
+                                        className="flex items-center gap-2"
+                                    >
+                                        <Facebook className="size-4" />
+                                        Facebook link
+                                    </Label>
+                                    <Input
+                                        id="facebook_url"
+                                        type="url"
+                                        value={data.facebook_url}
+                                        onChange={(event) =>
+                                            setData(
+                                                'facebook_url',
+                                                event.target.value,
+                                            )
+                                        }
+                                        placeholder="https://www.facebook.com/scentedmuse"
+                                    />
+                                    <InputError message={errors.facebook_url} />
+                                </div>
                             </div>
 
                             <div className="space-y-2">

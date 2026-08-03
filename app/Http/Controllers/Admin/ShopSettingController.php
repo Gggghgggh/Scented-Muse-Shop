@@ -26,6 +26,9 @@ class ShopSettingController extends Controller
             'shop_location' => ['nullable', 'string', 'max:255'],
             'shop_phone' => ['nullable', 'string', 'max:80'],
             'whatsapp_number' => ['nullable', 'string', 'max:40'],
+            'whatsapp_url' => ['nullable', 'url', 'max:255'],
+            'tiktok_url' => ['nullable', 'url', 'max:255'],
+            'facebook_url' => ['nullable', 'url', 'max:255'],
             'shopping_points_percentage' => ['required', 'numeric', 'min:0', 'max:100'],
         ]);
 

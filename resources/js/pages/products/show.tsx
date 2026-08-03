@@ -581,7 +581,7 @@ export default function ProductShow({
                                 </p>
                                 <div className="mt-3 flex items-center gap-2">
                                     <span className="rounded-sm bg-[#7c4be8] px-2 py-0.5 text-xs font-black text-white">
-                                        HOD INSTANT
+                                        SCENTED MUSE INSTANT
                                     </span>
                                     <span className="text-sm font-semibold">
                                         Get your order in 4 hours
@@ -740,22 +740,6 @@ export default function ProductShow({
                                 )}
                             </div>
 
-                            <div className="mt-7 border-t border-[#eee1dc] pt-5">
-                                <p className="font-black uppercase">
-                                    Promotions
-                                </p>
-                                <div className="mt-4 grid gap-3 text-[#2563eb]">
-                                    <p className="flex items-center gap-2">
-                                        <BadgeCheck className="size-5 text-[#f5a000]" />
-                                        Exclusive Deals | Call 0711011011 To
-                                        Order
-                                    </p>
-                                    <p className="flex items-center gap-2">
-                                        <Shield className="size-5 text-[#3b82f6]" />
-                                        Easy and safer payments on delivery.
-                                    </p>
-                                </div>
-                            </div>
                         </div>
                     </div>
 
@@ -1073,7 +1057,7 @@ function DeliveryPanel() {
             <div className="border-b border-[#eee1dc] px-4 py-3">
                 <h2 className="font-black uppercase">Delivery & Returns</h2>
                 <p className="mt-2 text-sm">
-                    HOD Express delivery in main cities{' '}
+                    Scented Muse Instant delivery in main cities{' '}
                     <span className="text-[#2563eb]">Details</span>
                 </p>
             </div>

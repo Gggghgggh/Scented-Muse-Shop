@@ -10,12 +10,18 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $shop_location
  * @property string|null $shop_phone
  * @property string|null $whatsapp_number
+ * @property string|null $whatsapp_url
+ * @property string|null $tiktok_url
+ * @property string|null $facebook_url
  * @property string $shopping_points_percentage
  */
 #[Fillable([
     'shop_location',
     'shop_phone',
     'whatsapp_number',
+    'whatsapp_url',
+    'tiktok_url',
+    'facebook_url',
     'shopping_points_percentage',
 ])]
 class ShopSetting extends Model
@@ -33,6 +39,9 @@ class ShopSetting extends Model
             'shop_location' => 'Online Ecommerce Shopping',
             'shop_phone' => '+254 700 000 000',
             'whatsapp_number' => null,
+            'whatsapp_url' => null,
+            'tiktok_url' => null,
+            'facebook_url' => null,
             'shopping_points_percentage' => 10,
         ]);
     }

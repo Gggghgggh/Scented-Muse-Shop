@@ -7,18 +7,15 @@ import {
     Facebook,
     Grid3X3,
     Heart,
-    Instagram,
-    Linkedin,
     Menu,
+    Music2,
     Search,
     ShoppingCart,
     Tags,
-    Twitter,
     UserRound,
     X,
-    Youtube,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { HeroSlideshow } from '@/components/hero-slideshow';
 import type { HeroSlide } from '@/components/hero-slideshow';
 import {
@@ -75,6 +72,9 @@ type SharedShopSettings = {
     shop_location?: string | null;
     shop_phone?: string | null;
     whatsapp_number?: string | null;
+    whatsapp_url?: string | null;
+    tiktok_url?: string | null;
+    facebook_url?: string | null;
 };
 
 const formatPrice = (price: string | number) =>
@@ -105,9 +105,6 @@ const getDisplayPrice = (product: Product) =>
     product.is_flash_sale_active && product.flash_sale_price
         ? product.flash_sale_price
         : product.price;
-
-const getWhatsAppLink = (whatsappNumber: string) =>
-    `https://wa.me/${whatsappNumber.replace(/\D/g, '')}`;
 
 const getInitialUrlState = () => {
     const query = new URLSearchParams(window.location.search);
@@ -822,7 +819,7 @@ export default function Welcome({
                     className="mx-auto max-w-[1540px] scroll-mt-32 px-3 py-4 sm:px-4 lg:px-8"
                 >
                     <div className="grid gap-4 rounded-md bg-[#3b2147] p-5 text-white shadow-sm sm:grid-cols-[1fr_auto] sm:items-center sm:p-7">
-                        <div>
+                        <div className="min-w-0">
                             <p className="text-sm font-black tracking-[0.18em] text-[#f0b36a] uppercase">
                                 Coupons
                             </p>
@@ -844,44 +841,44 @@ export default function Welcome({
                     id="contact"
                     className="mt-10 scroll-mt-32 bg-[#17131f] text-white"
                 >
-                    <div className="mx-auto grid max-w-[1540px] gap-10 px-4 py-12 lg:grid-cols-[1.5fr_0.8fr_0.8fr] lg:px-8">
-                        <div>
-                            <div className="flex items-center gap-3">
-                                <span className="flex h-14 w-28 items-center justify-center overflow-visible border-0 bg-transparent">
+                    <div className="mx-auto grid max-w-[1540px] gap-8 px-4 py-10 sm:gap-10 sm:py-12 md:grid-cols-2 lg:grid-cols-[1.5fr_0.8fr_0.8fr] lg:px-8">
+                        <div className="min-w-0 md:col-span-2 lg:col-span-1">
+                            <div className="flex min-w-0 flex-wrap items-center gap-3">
+                                <span className="flex h-12 w-24 shrink-0 items-center justify-center overflow-visible border-0 bg-transparent sm:h-14 sm:w-28">
                                     <img
                                         src="/logo.png"
                                         alt="Scented Muse logo"
                                         className="h-full w-full object-contain object-center"
                                     />
                                 </span>
-                                <div>
-                                    <p className="text-2xl font-black text-[#f0b36a]">
+                                <div className="min-w-0">
+                                    <p className="text-xl font-black break-words text-[#f0b36a] sm:text-2xl">
                                         Scented Muse
                                     </p>
-                                    <p className="text-sm font-bold">
+                                    <p className="text-sm leading-5 font-bold break-words">
                                         perfumes, deodorants & body care
                                     </p>
                                 </div>
                             </div>
-                            <p className="mt-7 max-w-3xl leading-7 text-[#a8afbd]">
+                            <p className="mt-6 max-w-3xl text-sm leading-7 break-words text-[#a8afbd] sm:mt-7 sm:text-base">
                                 Scented Muse is an online shop for perfumes,
                                 deodorants, watches, body wash, body spray and
                                 body splash. Products are posted and managed by
                                 the admin so shoppers always see the current
                                 collection.
                             </p>
-                            <div className="mt-7 flex max-w-3xl gap-5">
+                            <div className="mt-7 flex max-w-3xl flex-col gap-3 sm:flex-row sm:gap-5">
                                 <input
-                                    className="h-12 flex-1 border border-[#6f7480] bg-transparent px-5 outline-none"
+                                    className="h-12 min-w-0 flex-1 border border-[#6f7480] bg-transparent px-4 text-sm outline-none sm:px-5"
                                     placeholder="Your Email Address"
                                 />
-                                <button className="h-12 bg-[#e85d4f] px-12 font-bold transition hover:bg-[#f0b36a] hover:text-[#17131f]">
+                                <button className="h-12 shrink-0 bg-[#e85d4f] px-6 text-sm font-bold transition hover:bg-[#f0b36a] hover:text-[#17131f] sm:px-10 md:px-12">
                                     Subscribe
                                 </button>
                             </div>
                         </div>
 
-                        <div>
+                        <div className="min-w-0">
                             <h3 className="font-black text-[#a8afbd]">
                                 MY ACCOUNT
                             </h3>
@@ -900,30 +897,43 @@ export default function Welcome({
                             <h3 className="font-black text-[#a8afbd]">
                                 FOLLOW US
                             </h3>
-                            <div className="mt-5 flex gap-4">
-                                {[
-                                    Facebook,
-                                    Twitter,
-                                    Instagram,
-                                    Youtube,
-                                    Linkedin,
-                                ].map((Icon, index) => (
-                                    <span
-                                        key={index}
-                                        className="flex size-10 items-center justify-center rounded-full bg-[#3b2147] transition hover:-translate-y-1 hover:bg-[#e85d4f]"
+                            <div className="mt-5 flex max-w-full flex-wrap gap-3">
+                                {shopSettings?.whatsapp_url && (
+                                    <SocialLink
+                                        href={shopSettings.whatsapp_url}
+                                        label="WhatsApp"
+                                        className="bg-[#25d366] text-white shadow-[#25d366]/25 hover:bg-[#1ebe57]"
                                     >
-                                        <Icon className="size-5" />
-                                    </span>
-                                ))}
+                                        <WhatsAppIcon className="size-5" />
+                                    </SocialLink>
+                                )}
+                                {shopSettings?.tiktok_url && (
+                                    <SocialLink
+                                        href={shopSettings.tiktok_url}
+                                        label="TikTok"
+                                        className="bg-white text-[#111827] shadow-white/10 hover:bg-[#ff2d55] hover:text-white"
+                                    >
+                                        <Music2 className="size-5" />
+                                    </SocialLink>
+                                )}
+                                {shopSettings?.facebook_url && (
+                                    <SocialLink
+                                        href={shopSettings.facebook_url}
+                                        label="Facebook"
+                                        className="bg-[#1877f2] text-white shadow-[#1877f2]/25 hover:bg-[#0f5ec7]"
+                                    >
+                                        <Facebook className="size-5" />
+                                    </SocialLink>
+                                )}
                             </div>
                             <h3 className="mt-8 font-black text-[#a8afbd]">
                                 CONTACTS
                             </h3>
-                            <p className="mt-4 text-sm text-[#a8afbd]">
+                            <p className="mt-4 max-w-full text-sm leading-6 break-words text-[#a8afbd]">
                                 {shopSettings?.shop_location ||
                                     'Online Ecommerce Shopping'}
                             </p>
-                            <p className="mt-2 text-sm font-semibold">
+                            <p className="mt-2 max-w-full text-sm leading-6 font-semibold break-words">
                                 {shopSettings?.shop_phone || '+254 700 000 000'}
                             </p>
                         </div>
@@ -933,12 +943,12 @@ export default function Welcome({
                     </div>
                 </footer>
 
-                {shopSettings?.whatsapp_number && (
+                {shopSettings?.whatsapp_url && (
                     <a
-                        href={getWhatsAppLink(shopSettings.whatsapp_number)}
+                        href={shopSettings.whatsapp_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="fixed bottom-4 left-4 z-30 hidden size-12 items-center justify-center rounded-full bg-[#25d366] text-white shadow-2xl shadow-[#25d366]/25 transition hover:-translate-y-1 hover:bg-[#1ebe57] sm:bottom-6 sm:left-6 sm:flex sm:size-16"
+                        className="fixed bottom-4 left-4 z-30 hidden size-12 items-center justify-center rounded-full bg-[#25d366] text-white shadow-2xl shadow-[#25d366]/30 ring-4 ring-white/80 transition hover:-translate-y-1 hover:scale-105 hover:bg-[#1ebe57] sm:bottom-6 sm:left-6 sm:flex sm:size-16"
                         aria-label="Chat with us on WhatsApp"
                     >
                         <WhatsAppIcon className="size-6 sm:size-8" />
@@ -958,6 +968,31 @@ export default function Welcome({
                 </button>
             </main>
         </>
+    );
+}
+
+function SocialLink({
+    href,
+    label,
+    className,
+    children,
+}: {
+    href: string;
+    label: string;
+    className: string;
+    children: ReactNode;
+}) {
+    return (
+        <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={label}
+            title={label}
+            className={`flex size-10 shrink-0 items-center justify-center rounded-full shadow-xl ring-1 ring-white/15 transition hover:-translate-y-1 hover:scale-105 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none sm:size-11 ${className}`}
+        >
+            {children}
+        </a>
     );
 }
 

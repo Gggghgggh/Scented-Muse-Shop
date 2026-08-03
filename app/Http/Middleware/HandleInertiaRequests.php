@@ -48,11 +48,22 @@ class HandleInertiaRequests extends Middleware
                 'checkout' => fn () => $request->session()->get('checkout'),
             ],
             'shopSettings' => fn () => Schema::hasTable('shop_settings')
-                ? ShopSetting::current()->only(['shop_location', 'shop_phone', 'whatsapp_number', 'shopping_points_percentage'])
+                ? ShopSetting::current()->only([
+                    'shop_location',
+                    'shop_phone',
+                    'whatsapp_number',
+                    'whatsapp_url',
+                    'tiktok_url',
+                    'facebook_url',
+                    'shopping_points_percentage',
+                ])
                 : [
                     'shop_location' => 'Online Ecommerce Shopping',
                     'shop_phone' => '+254 700 000 000',
                     'whatsapp_number' => null,
+                    'whatsapp_url' => null,
+                    'tiktok_url' => null,
+                    'facebook_url' => null,
                     'shopping_points_percentage' => 10,
                 ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
