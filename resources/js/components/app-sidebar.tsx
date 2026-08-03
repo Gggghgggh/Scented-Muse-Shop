@@ -61,7 +61,7 @@ const mainNavItems: NavItem[] = [
         icon: CreditCard,
     },
     {
-        title: 'Delivery Prices',
+        title: 'Delivery Weight Prices',
         href: '/admin/delivery-rates',
         icon: Truck,
     },

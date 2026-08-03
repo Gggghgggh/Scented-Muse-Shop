@@ -49,7 +49,7 @@ export function AppSidebarHeader({
         },
         {
             href: '/admin/delivery-rates',
-            keywords: ['delivery', 'rates', 'prices', 'locations', 'town', 'county'],
+            keywords: ['delivery', 'rates', 'prices', 'locations', 'town', 'county', 'weight'],
         },
         {
             href: '/admin/payments',

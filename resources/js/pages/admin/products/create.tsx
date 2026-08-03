@@ -263,6 +263,31 @@ export default function ProductCreate({
                                 <InputError message={errors.description} />
                             </div>
 
+                            <div className="space-y-2 rounded-md border p-3">
+                                <Label htmlFor="weight_kg">
+                                    Product weight (kg)
+                                </Label>
+                                <Input
+                                    id="weight_kg"
+                                    type="number"
+                                    min="0.01"
+                                    step="0.01"
+                                    value={data.weight_kg}
+                                    onChange={(event) =>
+                                        setData(
+                                            'weight_kg',
+                                            event.target.value,
+                                        )
+                                    }
+                                    placeholder="Example: 0.5"
+                                />
+                                <InputError message={errors.weight_kg} />
+                                <p className="text-xs text-muted-foreground">
+                                    This is used with the customer's town to
+                                    calculate delivery fees at checkout.
+                                </p>
+                            </div>
+
                             <div className="space-y-3 rounded-md border p-3">
                                 <div>
                                     <Label>Base pricing</Label>
@@ -556,30 +581,6 @@ export default function ProductCreate({
                                     <p className="text-xs text-muted-foreground">
                                         Used only when no size quantities are
                                         added.
-                                    </p>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="weight_kg">
-                                        Product weight (kg)
-                                    </Label>
-                                    <Input
-                                        id="weight_kg"
-                                        type="number"
-                                        min="0.01"
-                                        step="0.01"
-                                        value={data.weight_kg}
-                                        onChange={(event) =>
-                                            setData(
-                                                'weight_kg',
-                                                event.target.value,
-                                            )
-                                        }
-                                    />
-                                    <InputError message={errors.weight_kg} />
-                                    <p className="text-xs text-muted-foreground">
-                                        Used to calculate delivery fees at
-                                        checkout.
                                     </p>
                                 </div>
                             </div>

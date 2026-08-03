@@ -10,8 +10,10 @@ import { login, register } from '@/routes';
 type DeliveryRate = {
     county: string;
     town: string;
-    base_fee: string | number;
-    fee_per_kg: string | number;
+    fee_0_1kg: string | number;
+    fee_1_3kg: string | number;
+    fee_3_5kg: string | number;
+    fee_over_5kg: string | number;
 };
 
 const formatPrice = (price: string | number) =>
@@ -549,10 +551,19 @@ function getDeliveryFee(
         return 200;
     }
 
-    return (
-        Number(rate.base_fee) +
-        Math.max(0, totalWeightKg) * Number(rate.fee_per_kg)
-    );
+    if (totalWeightKg <= 1) {
+        return Number(rate.fee_0_1kg);
+    }
+
+    if (totalWeightKg <= 3) {
+        return Number(rate.fee_1_3kg);
+    }
+
+    if (totalWeightKg <= 5) {
+        return Number(rate.fee_3_5kg);
+    }
+
+    return Number(rate.fee_over_5kg);
 }
 
 function getItemSizeQuantity(item: StoredCartItem, size?: string) {

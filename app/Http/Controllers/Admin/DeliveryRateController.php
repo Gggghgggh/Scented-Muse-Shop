@@ -17,7 +17,7 @@ class DeliveryRateController extends Controller
             'rates' => DeliveryRate::query()
                 ->orderBy('county')
                 ->orderBy('town')
-                ->get(['id', 'county', 'town', 'base_fee', 'fee_per_kg', 'is_active']),
+                ->get(['id', 'county', 'town', 'fee_0_1kg', 'fee_1_3kg', 'fee_3_5kg', 'fee_over_5kg', 'is_active']),
         ]);
     }
 
@@ -26,8 +26,10 @@ class DeliveryRateController extends Controller
         $data = $request->validate([
             'rates' => ['required', 'array'],
             'rates.*.id' => ['required', 'integer', 'exists:delivery_rates,id'],
-            'rates.*.base_fee' => ['required', 'numeric', 'min:0', 'max:999999.99'],
-            'rates.*.fee_per_kg' => ['required', 'numeric', 'min:0', 'max:999999.99'],
+            'rates.*.fee_0_1kg' => ['required', 'numeric', 'min:0', 'max:999999.99'],
+            'rates.*.fee_1_3kg' => ['required', 'numeric', 'min:0', 'max:999999.99'],
+            'rates.*.fee_3_5kg' => ['required', 'numeric', 'min:0', 'max:999999.99'],
+            'rates.*.fee_over_5kg' => ['required', 'numeric', 'min:0', 'max:999999.99'],
             'rates.*.is_active' => ['boolean'],
         ]);
 
@@ -35,8 +37,10 @@ class DeliveryRateController extends Controller
             DeliveryRate::query()
                 ->whereKey($rate['id'])
                 ->update([
-                    'base_fee' => $rate['base_fee'],
-                    'fee_per_kg' => $rate['fee_per_kg'],
+                    'fee_0_1kg' => $rate['fee_0_1kg'],
+                    'fee_1_3kg' => $rate['fee_1_3kg'],
+                    'fee_3_5kg' => $rate['fee_3_5kg'],
+                    'fee_over_5kg' => $rate['fee_over_5kg'],
                     'is_active' => (bool) ($rate['is_active'] ?? false),
                 ]);
         }

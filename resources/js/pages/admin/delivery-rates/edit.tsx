@@ -10,8 +10,10 @@ type DeliveryRate = {
     id: number;
     county: string;
     town: string;
-    base_fee: string | number;
-    fee_per_kg: string | number;
+    fee_0_1kg: string | number;
+    fee_1_3kg: string | number;
+    fee_3_5kg: string | number;
+    fee_over_5kg: string | number;
     is_active: boolean;
 };
 
@@ -22,8 +24,10 @@ export default function DeliveryRatesEdit({ rates }: { rates: DeliveryRate[] }) 
             id: rate.id,
             county: rate.county,
             town: rate.town,
-            base_fee: String(rate.base_fee),
-            fee_per_kg: String(rate.fee_per_kg),
+            fee_0_1kg: String(rate.fee_0_1kg),
+            fee_1_3kg: String(rate.fee_1_3kg),
+            fee_3_5kg: String(rate.fee_3_5kg),
+            fee_over_5kg: String(rate.fee_over_5kg),
             is_active: Boolean(rate.is_active),
         })),
     });
@@ -39,7 +43,12 @@ export default function DeliveryRatesEdit({ rates }: { rates: DeliveryRate[] }) 
 
     function updateRate(
         id: number,
-        field: 'base_fee' | 'fee_per_kg' | 'is_active',
+        field:
+            | 'fee_0_1kg'
+            | 'fee_1_3kg'
+            | 'fee_3_5kg'
+            | 'fee_over_5kg'
+            | 'is_active',
         value: string | boolean,
     ) {
         setData(
@@ -57,12 +66,14 @@ export default function DeliveryRatesEdit({ rates }: { rates: DeliveryRate[] }) 
 
     return (
         <>
-            <Head title="Delivery prices" />
+            <Head title="Delivery weight prices" />
             <div className="space-y-6 p-4 md:p-6">
                 <div>
-                    <h1 className="text-2xl font-semibold">Delivery prices</h1>
+                    <h1 className="text-2xl font-semibold">
+                        Delivery weight prices
+                    </h1>
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Set base delivery fees and extra per-kg charges for each location.
+                        Set delivery fees for each town based on the customer's total order weight.
                     </p>
                 </div>
 
@@ -85,13 +96,15 @@ export default function DeliveryRatesEdit({ rates }: { rates: DeliveryRate[] }) 
                                 />
                             </label>
                             <div className="overflow-x-auto rounded-md border">
-                                <table className="min-w-[760px] text-sm">
+                                <table className="min-w-[980px] text-sm">
                                     <thead className="bg-muted text-muted-foreground">
                                         <tr>
                                             <th className="px-3 py-3 text-left">County</th>
                                             <th className="px-3 py-3 text-left">Town</th>
-                                            <th className="px-3 py-3 text-left">Base fee</th>
-                                            <th className="px-3 py-3 text-left">Fee per kg</th>
+                                            <th className="px-3 py-3 text-left">0-1 kg</th>
+                                            <th className="px-3 py-3 text-left">1-3 kg</th>
+                                            <th className="px-3 py-3 text-left">3-5 kg</th>
+                                            <th className="px-3 py-3 text-left">Over 5 kg</th>
                                             <th className="px-3 py-3 text-left">Active</th>
                                         </tr>
                                     </thead>
@@ -105,9 +118,9 @@ export default function DeliveryRatesEdit({ rates }: { rates: DeliveryRate[] }) 
                                                         type="number"
                                                         min="0"
                                                         step="0.01"
-                                                        value={rate.base_fee}
+                                                        value={rate.fee_0_1kg}
                                                         onChange={(event) =>
-                                                            updateRate(rate.id, 'base_fee', event.target.value)
+                                                            updateRate(rate.id, 'fee_0_1kg', event.target.value)
                                                         }
                                                     />
                                                 </td>
@@ -116,9 +129,31 @@ export default function DeliveryRatesEdit({ rates }: { rates: DeliveryRate[] }) 
                                                         type="number"
                                                         min="0"
                                                         step="0.01"
-                                                        value={rate.fee_per_kg}
+                                                        value={rate.fee_1_3kg}
                                                         onChange={(event) =>
-                                                            updateRate(rate.id, 'fee_per_kg', event.target.value)
+                                                            updateRate(rate.id, 'fee_1_3kg', event.target.value)
+                                                        }
+                                                    />
+                                                </td>
+                                                <td className="px-3 py-2">
+                                                    <Input
+                                                        type="number"
+                                                        min="0"
+                                                        step="0.01"
+                                                        value={rate.fee_3_5kg}
+                                                        onChange={(event) =>
+                                                            updateRate(rate.id, 'fee_3_5kg', event.target.value)
+                                                        }
+                                                    />
+                                                </td>
+                                                <td className="px-3 py-2">
+                                                    <Input
+                                                        type="number"
+                                                        min="0"
+                                                        step="0.01"
+                                                        value={rate.fee_over_5kg}
+                                                        onChange={(event) =>
+                                                            updateRate(rate.id, 'fee_over_5kg', event.target.value)
                                                         }
                                                     />
                                                 </td>
@@ -153,6 +188,6 @@ export default function DeliveryRatesEdit({ rates }: { rates: DeliveryRate[] }) 
 DeliveryRatesEdit.layout = {
     breadcrumbs: [
         { title: 'Dashboard', href: '/dashboard' },
-        { title: 'Delivery prices', href: '/admin/delivery-rates' },
+        { title: 'Delivery weight prices', href: '/admin/delivery-rates' },
     ],
 };

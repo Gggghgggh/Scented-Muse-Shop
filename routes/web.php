@@ -78,7 +78,7 @@ Route::get('flash-sale', function () use ($applyActiveFlashSaleWindow) {
 Route::get('cart', fn () => Inertia::render('cart', [
     'deliveryRates' => DeliveryRate::query()
         ->where('is_active', true)
-        ->get(['county', 'town', 'base_fee', 'fee_per_kg']),
+        ->get(['county', 'town', 'fee_0_1kg', 'fee_1_3kg', 'fee_3_5kg', 'fee_over_5kg']),
 ]))->name('cart');
 Route::get('my-orders', fn (Request $request) => Inertia::render('orders', [
     'orders' => $request->user()

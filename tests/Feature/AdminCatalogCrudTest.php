@@ -103,6 +103,18 @@ test('admin can create update and delete products', function () {
     $product = Product::query()->where('slug', 'test-product')->firstOrFail();
 
     expect($product->product_code)->toStartWith('SM-');
+    expect($product)
+        ->name->toBe('Test Product')
+        ->price->toBe('1200.00')
+        ->weight_kg->toBe('1.50')
+        ->photo_path->not->toBeNull();
+
+    $this->assertDatabaseHas('products', [
+        'id' => $product->id,
+        'name' => 'Test Product',
+        'slug' => 'test-product',
+        'weight_kg' => 1.5,
+    ]);
 
     $this->actingAs($admin)
         ->put(route('admin.products.update', $product), [
