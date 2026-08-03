@@ -1,5 +1,13 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { Menu, Search, ShoppingCart, UserRound, X } from 'lucide-react';
+import {
+    LogIn,
+    Menu,
+    Search,
+    ShoppingCart,
+    UserPlus,
+    UserRound,
+    X,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
     DropdownMenu,
@@ -128,7 +136,13 @@ export function CustomerNavbar() {
                         </DropdownMenu>
                     ) : (
                         <>
-                            <UserRound className="size-10 rounded-full border border-[#d7dce5] p-2.5 text-[#8b93a3]" />
+                            <Link
+                                href={login()}
+                                className="flex size-10 items-center justify-center rounded-full border border-[#d7dce5] text-[#8b93a3] transition hover:border-[#e85d4f] hover:text-[#e85d4f]"
+                                aria-label="Login"
+                            >
+                                <UserRound className="size-5" />
+                            </Link>
                             <Link
                                 href={login()}
                                 className="hidden hover:text-[#3b2147] sm:inline"
@@ -231,6 +245,26 @@ export function CustomerNavbar() {
                                 <X className="size-5" />
                             </button>
                         </div>
+                        {!auth.user && (
+                            <div className="grid gap-2 border-b border-[#ead9d1] p-3">
+                                <Link
+                                    href={login()}
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className="flex h-11 items-center justify-center gap-2 rounded-md bg-[#e85d4f] px-4 text-sm font-black text-white shadow-sm shadow-[#e85d4f]/20 transition hover:bg-[#d94d40]"
+                                >
+                                    <LogIn className="size-4" />
+                                    Login
+                                </Link>
+                                <Link
+                                    href={register()}
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className="flex h-11 items-center justify-center gap-2 rounded-md border border-[#e85d4f] bg-white px-4 text-sm font-black text-[#e85d4f] transition hover:bg-[#fff1ea]"
+                                >
+                                    <UserPlus className="size-4" />
+                                    Registration
+                                </Link>
+                            </div>
+                        )}
                         <nav className="grid gap-1 p-3">
                             {customerLinks.map(([label, href]) => (
                                 <Link

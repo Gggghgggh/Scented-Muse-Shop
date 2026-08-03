@@ -63,6 +63,10 @@ test('users can logout', function () {
     $this->assertGuest();
 });
 
+test('sessions expire after five inactive minutes', function () {
+    expect(config('session.lifetime'))->toBe(5);
+});
+
 test('users are rate limited', function () {
     $user = User::factory()->create();
 
