@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { CustomerNavbar } from '@/components/customer-navbar';
 
 type OrderItem = {
+    product_code?: string | null;
     name: string;
     size?: string | null;
     color?: string | null;
@@ -205,6 +206,11 @@ function ReceiptModal({
                                         <p className="font-black">
                                             {item.name}
                                         </p>
+                                        {item.product_code && (
+                                            <p className="font-mono text-xs font-bold text-[#3b2147]">
+                                                Code: {item.product_code}
+                                            </p>
+                                        )}
                                         <p className="text-[#7f5f53]">
                                             Size: {item.size ?? 'Default'} |
                                             Color: {item.color ?? 'Default'} |

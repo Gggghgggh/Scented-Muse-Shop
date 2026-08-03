@@ -22,6 +22,7 @@ import { CustomerNavbar } from '@/components/customer-navbar';
 
 type Product = {
     id: number;
+    product_code?: string | null;
     name: string;
     slug: string;
     description?: string | null;
@@ -533,6 +534,11 @@ export default function ProductShow({
                                 | Similar products from{' '}
                                 {currentProduct.category?.name ?? 'Scented Muse'}
                             </p>
+                            {currentProduct.product_code && (
+                                <p className="mt-3 inline-flex rounded-sm border border-[#ead9d1] px-2 py-1 font-mono text-sm font-black text-[#3b2147]">
+                                    Code: {currentProduct.product_code}
+                                </p>
+                            )}
                             <div className="mt-4 border-t border-[#eee1dc] pt-4">
                                 <div className="flex flex-wrap items-center gap-2">
                                     <span className="text-3xl font-black">

@@ -30,6 +30,7 @@ class ProductController extends Controller
                 ->when($search !== '', function ($query) use ($search): void {
                     $query->where(function ($query) use ($search): void {
                         $query->where('name', 'like', "%{$search}%")
+                            ->orWhere('product_code', 'like', "%{$search}%")
                             ->orWhere('slug', 'like', "%{$search}%")
                             ->orWhere('brand', 'like', "%{$search}%")
                             ->orWhere('description', 'like', "%{$search}%")

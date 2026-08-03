@@ -18,6 +18,7 @@ import type { Paginated } from '@/types/pagination';
 
 type Product = {
     id: number;
+    product_code: string | null;
     name: string;
     slug: string;
     description: string;
@@ -113,7 +114,7 @@ export default function ProductIndex({
                                     setQuery(event.target.value)
                                 }
                                 className="h-full border-0 px-0 shadow-none focus-visible:ring-0"
-                                placeholder="Search by name, category, brand, price, size, color, status, or stock"
+                                placeholder="Search by code, name, category, brand, price, size, color, status, or stock"
                             />
                         </label>
                         <div className="overflow-hidden rounded-md border">
@@ -170,6 +171,13 @@ export default function ProductIndex({
                                                             {product.brand ??
                                                                 product.slug}
                                                         </div>
+                                                        {product.product_code && (
+                                                            <div className="mt-1 inline-flex rounded-md border px-2 py-0.5 font-mono text-xs font-bold">
+                                                                {
+                                                                    product.product_code
+                                                                }
+                                                            </div>
+                                                        )}
                                                         {product.is_flash_sale && (
                                                             <div className="mt-1 inline-flex rounded-md bg-[#fff1ea] px-2 py-0.5 text-xs font-bold text-[#e85d4f]">
                                                                 Flash sale

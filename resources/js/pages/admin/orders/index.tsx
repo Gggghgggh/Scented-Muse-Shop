@@ -13,6 +13,7 @@ import { deleteAdminResource } from '@/lib/admin-actions';
 import type { Paginated } from '@/types/pagination';
 
 type OrderItem = {
+    product_code?: string | null;
     name: string;
     size?: string | null;
     color?: string | null;
@@ -293,6 +294,13 @@ function OrderDetailsModal({
                                                 <tr key={index}>
                                                     <td className="px-3 py-2 font-medium">
                                                         {item.name}
+                                                        {item.product_code && (
+                                                            <div className="mt-1 font-mono text-xs text-muted-foreground">
+                                                                {
+                                                                    item.product_code
+                                                                }
+                                                            </div>
+                                                        )}
                                                     </td>
                                                     <td className="px-3 py-2 text-muted-foreground">
                                                         Size:{' '}

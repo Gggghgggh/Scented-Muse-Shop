@@ -15,6 +15,7 @@ const FRAGRANCE_TYPES = ['EDP', 'EDT', 'Perfume', 'Pour Homme', 'Arabic'];
 
 type Product = {
     id: number;
+    product_code: string | null;
     product_category_id: number;
     name: string;
     slug: string;
@@ -216,6 +217,11 @@ export default function ProductEdit({
                 <Card>
                     <CardHeader>
                         <CardTitle>Edit product</CardTitle>
+                        {product.product_code && (
+                            <p className="font-mono text-sm font-bold text-muted-foreground">
+                                Product code: {product.product_code}
+                            </p>
+                        )}
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={submit} className="space-y-5">

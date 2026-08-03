@@ -12,6 +12,7 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
+ * @property string|null $product_code
  * @property int $product_category_id
  * @property string $name
  * @property string $slug
@@ -36,6 +37,7 @@ use Illuminate\Support\Carbon;
  * @property array<string, int>|null $flash_sale_size_quantities
  */
 #[Fillable([
+    'product_code',
     'product_category_id',
     'name',
     'slug',
@@ -65,6 +67,24 @@ class Product extends Model
     use HasFactory;
 
     protected $appends = ['photo_url', 'photo_urls', 'is_flash_sale_active'];
+
+    protected static function booted(): void
+    {
+        static::created(function (Product $product): void {
+            if ($product->product_code) {
+                return;
+            }
+
+            $product->forceFill([
+                'product_code' => self::codeForId((int) $product->id),
+            ])->saveQuietly();
+        });
+    }
+
+    public static function codeForId(int $id): string
+    {
+        return 'SM-'.str_pad((string) (100000 + $id), 6, '0', STR_PAD_LEFT);
+    }
 
     /**
      * Get the attributes that should be cast.

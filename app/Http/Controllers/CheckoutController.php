@@ -60,6 +60,7 @@ class CheckoutController extends Controller
                 $subtotal += $lineTotal;
                 $orderItems[] = [
                     'product_id' => $product->id,
+                    'product_code' => $product->product_code,
                     'name' => $product->name,
                     'slug' => $product->slug,
                     'size' => $size === '' ? null : $size,
@@ -201,7 +202,7 @@ class CheckoutController extends Controller
 
             return [
                 'name' => (string) ($item['name'] ?? 'Product'),
-                'sku' => (string) ($item['slug'] ?? $item['product_id'] ?? 'HOD'),
+                'sku' => (string) ($item['product_code'] ?? $item['slug'] ?? $item['product_id'] ?? 'SM'),
                 'size' => $item['size'] ?? null,
                 'color' => $item['color'] ?? null,
                 'qty' => $quantity,

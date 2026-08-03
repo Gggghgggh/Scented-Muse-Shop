@@ -101,6 +101,8 @@ test('admin can create update and delete products', function () {
 
     $product = Product::query()->where('slug', 'test-product')->firstOrFail();
 
+    expect($product->product_code)->toStartWith('SM-');
+
     $this->actingAs($admin)
         ->put(route('admin.products.update', $product), [
             'product_category_id' => $category->id,
