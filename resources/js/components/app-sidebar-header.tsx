@@ -48,6 +48,10 @@ export function AppSidebarHeader({
             keywords: ['order', 'orders', 'delivery', 'status'],
         },
         {
+            href: '/admin/delivery-rates',
+            keywords: ['delivery', 'rates', 'prices', 'locations', 'town', 'county'],
+        },
+        {
             href: '/admin/payments',
             keywords: ['payment', 'payments', 'mpesa', 'm-pesa', 'card', 'cash'],
         },

@@ -28,6 +28,7 @@ class ProductFactory extends Factory
             'description' => fake()->paragraph(),
             'price' => fake()->randomFloat(2, 10, 250),
             'stock_quantity' => fake()->numberBetween(0, 100),
+            'weight_kg' => 1,
             'photo_path' => null,
             'is_active' => true,
         ];

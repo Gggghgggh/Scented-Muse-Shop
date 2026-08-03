@@ -7,6 +7,13 @@ import { getCartItems  } from '@/lib/shop-storage';
 import type {StoredCartItem} from '@/lib/shop-storage';
 import { login, register } from '@/routes';
 
+type DeliveryRate = {
+    county: string;
+    town: string;
+    base_fee: string | number;
+    fee_per_kg: string | number;
+};
+
 const formatPrice = (price: string | number) =>
     new Intl.NumberFormat('en-KE', {
         style: 'currency',
@@ -16,7 +23,11 @@ const formatPrice = (price: string | number) =>
         .format(Number(price))
         .replace('KES', 'KSh');
 
-export default function CartPage() {
+export default function CartPage({
+    deliveryRates = [],
+}: {
+    deliveryRates?: DeliveryRate[];
+}) {
     const { auth } = usePage().props;
     const [items, setItems] = useState<StoredCartItem[]>(() => getCartItems());
     const countyNames = Object.keys(kenyaLocations);
@@ -39,7 +50,22 @@ export default function CartPage() {
             ),
         [items],
     );
-    const deliveryFee = items.length > 0 ? 200 : 0;
+    const totalWeightKg = useMemo(
+        () =>
+            items.reduce(
+                (sum, item) =>
+                    sum + Number(item.weight_kg ?? 1) * (item.quantity ?? 1),
+                0,
+            ),
+        [items],
+    );
+    const deliveryFee = useMemo(
+        () =>
+            items.length > 0
+                ? getDeliveryFee(deliveryRates, county, town, totalWeightKg)
+                : 0,
+        [county, deliveryRates, items.length, totalWeightKg, town],
+    );
     const grandTotal = total + deliveryFee;
 
     function persistCart(nextItems: StoredCartItem[]) {
@@ -497,6 +523,10 @@ export default function CartPage() {
                                             Delivery fee:{' '}
                                             {formatPrice(deliveryFee)}
                                         </p>
+                                        <p>
+                                            Weight:{' '}
+                                            {totalWeightKg.toFixed(2)} kg
+                                        </p>
                                         <p className="mt-1 font-black text-[#3b2147]">
                                             Total: {formatPrice(grandTotal)}
                                         </p>
@@ -519,6 +549,26 @@ export default function CartPage() {
                 </section>
             </main>
         </>
+    );
+}
+
+function getDeliveryFee(
+    rates: DeliveryRate[],
+    county: string,
+    town: string,
+    totalWeightKg: number,
+) {
+    const rate = rates.find(
+        (item) => item.county === county && item.town === town,
+    );
+
+    if (!rate) {
+        return 200;
+    }
+
+    return (
+        Number(rate.base_fee) +
+        Math.max(0, totalWeightKg) * Number(rate.fee_per_kg)
     );
 }
 

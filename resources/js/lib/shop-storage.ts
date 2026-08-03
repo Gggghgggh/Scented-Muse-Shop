@@ -4,6 +4,7 @@ export type StoredCartItem = {
     slug: string;
     price: string | number;
     base_price?: string | number;
+    weight_kg?: string | number;
     flash_sale_price?: string | number | null;
     is_flash_sale?: boolean;
     is_flash_sale_active?: boolean;

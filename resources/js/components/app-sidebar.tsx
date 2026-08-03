@@ -61,6 +61,11 @@ const mainNavItems: NavItem[] = [
         icon: CreditCard,
     },
     {
+        title: 'Delivery Prices',
+        href: '/admin/delivery-rates',
+        icon: Truck,
+    },
+    {
         title: 'Hero Slides',
         href: '/admin/hero-slides',
         icon: Images,

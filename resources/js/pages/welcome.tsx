@@ -48,6 +48,7 @@ type Product = {
     original_price?: string | number | null;
     discount_percentage?: number | null;
     stock_quantity: number;
+    weight_kg?: string | number;
     size_quantities?: Record<string, string | number> | null;
     flash_sale_size_quantities?: Record<string, string | number> | null;
     photo_url?: string | null;

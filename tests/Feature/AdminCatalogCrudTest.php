@@ -91,6 +91,7 @@ test('admin can create update and delete products', function () {
             'original_price' => 1500,
             'price' => 1200,
             'stock_quantity' => 8,
+            'weight_kg' => 1.5,
             'sizes' => ['Queen', 'King', 'Queen', ''],
             'colors' => ['White', 'Navy', 'White', ''],
             'photo' => UploadedFile::fake()->image('product.jpg'),
@@ -113,6 +114,7 @@ test('admin can create update and delete products', function () {
             'original_price' => 2000,
             'price' => 1500,
             'stock_quantity' => 10,
+            'weight_kg' => 2,
             'sizes' => ['S', 'M', 'L'],
             'colors' => ['Black', 'Cream'],
             'is_active' => false,
@@ -150,6 +152,7 @@ test('creating a product without any price fails validation', function () {
             'name' => 'No Price Product',
             'description' => 'A product with no price anywhere.',
             'stock_quantity' => 5,
+            'weight_kg' => 1,
             'photo' => UploadedFile::fake()->image('product.jpg'),
             'is_active' => true,
         ])

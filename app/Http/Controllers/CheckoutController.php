@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\DeliveryRate;
 use App\Models\Product;
 use App\Models\ShopSetting;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -34,7 +35,7 @@ class CheckoutController extends Controller
         $order = DB::transaction(function () use ($data, $request): Order {
             $orderItems = [];
             $subtotal = 0;
-            $deliveryFee = 200;
+            $totalWeightKg = 0.0;
 
             foreach ($data['items'] as $item) {
                 $product = Product::query()
@@ -58,6 +59,8 @@ class CheckoutController extends Controller
 
                 $lineTotal = $unitPrice * $quantity;
                 $subtotal += $lineTotal;
+                $lineWeightKg = (float) $product->weight_kg * $quantity;
+                $totalWeightKg += $lineWeightKg;
                 $orderItems[] = [
                     'product_id' => $product->id,
                     'product_code' => $product->product_code,
@@ -66,12 +69,15 @@ class CheckoutController extends Controller
                     'size' => $size === '' ? null : $size,
                     'color' => $color === '' ? null : $color,
                     'quantity' => $quantity,
+                    'weight_kg' => (float) $product->weight_kg,
+                    'line_weight_kg' => $lineWeightKg,
                     'unit_price' => $unitPrice,
                     'line_total' => $lineTotal,
                     'photo_url' => $product->photo_url,
                 ];
             }
 
+            $deliveryFee = DeliveryRate::quote($data['county'], $data['town'], $totalWeightKg);
             $total = $subtotal + $deliveryFee;
 
             $order = Order::create([

@@ -24,6 +24,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $original_price
  * @property int|null $discount_percentage
  * @property int $stock_quantity
+ * @property string $weight_kg
  * @property array<int, string>|null $sizes
  * @property array<string, numeric>|null $size_prices
  * @property array<string, int>|null $size_quantities
@@ -49,6 +50,7 @@ use Illuminate\Support\Carbon;
     'original_price',
     'discount_percentage',
     'stock_quantity',
+    'weight_kg',
     'sizes',
     'size_prices',
     'size_quantities',
@@ -99,6 +101,7 @@ class Product extends Model
             'original_price' => 'decimal:2',
             'discount_percentage' => 'integer',
             'stock_quantity' => 'integer',
+            'weight_kg' => 'decimal:2',
             'sizes' => 'array',
             'size_prices' => 'array',
             'size_quantities' => 'array',

@@ -9,6 +9,7 @@ type Product = {
     price: string | number;
     original_price?: string | number | null;
     discount_percentage?: number | null;
+    weight_kg?: string | number;
     photo_url?: string | null;
 };
 

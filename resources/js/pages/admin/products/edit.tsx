@@ -27,6 +27,7 @@ type Product = {
     discount_percentage: number | null;
     flash_sale_price: string | null;
     stock_quantity: number;
+    weight_kg: string | number;
     sizes: string[] | null;
     colors: string[] | null;
     variants:
@@ -84,6 +85,7 @@ export default function ProductEdit({
         price: product.price,
         flash_sale_price: product.flash_sale_price ?? '',
         stock_quantity: product.stock_quantity.toString(),
+        weight_kg: String(product.weight_kg ?? 1),
         variants:
             product.variants && product.variants.length > 0
                 ? product.variants.map((variant) => ({
@@ -682,6 +684,32 @@ export default function ProductEdit({
                                     </p>
                                 </div>
 
+                                <div className="space-y-2">
+                                    <Label htmlFor="weight_kg">
+                                        Product weight (kg)
+                                    </Label>
+                                    <Input
+                                        id="weight_kg"
+                                        type="number"
+                                        min="0.01"
+                                        step="0.01"
+                                        value={data.weight_kg}
+                                        onChange={(event) =>
+                                            setData(
+                                                'weight_kg',
+                                                event.target.value,
+                                            )
+                                        }
+                                    />
+                                    <InputError message={errors.weight_kg} />
+                                    <p className="text-xs text-muted-foreground">
+                                        Used to calculate delivery fees at
+                                        checkout.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="grid gap-5 md:grid-cols-2">
                                 <div className="space-y-2">
                                     <Label htmlFor="photos">
                                         Replace images

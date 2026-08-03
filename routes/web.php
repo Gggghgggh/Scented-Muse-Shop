@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\Admin\DeliveryRateController;
 use App\Http\Controllers\Admin\HeroSlideController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PaymentController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ShopSettingController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\CheckoutController;
+use App\Models\DeliveryRate;
 use App\Models\HeroSlide;
 use App\Models\Order;
 use App\Models\Payment;
@@ -73,7 +75,11 @@ Route::get('flash-sale', function () use ($applyActiveFlashSaleWindow) {
     ]);
 })->name('flash-sale');
 
-Route::get('cart', fn () => Inertia::render('cart'))->name('cart');
+Route::get('cart', fn () => Inertia::render('cart', [
+    'deliveryRates' => DeliveryRate::query()
+        ->where('is_active', true)
+        ->get(['county', 'town', 'base_fee', 'fee_per_kg']),
+]))->name('cart');
 Route::get('my-orders', fn (Request $request) => Inertia::render('orders', [
     'orders' => $request->user()
         ->orders()
@@ -321,6 +327,8 @@ Route::middleware(['auth', 'verified'])->group(function () use ($shopProps) {
             Route::resource('orders', OrderController::class)->except('show');
             Route::resource('payments', PaymentController::class)->except('show');
             Route::resource('hero-slides', HeroSlideController::class)->except('show');
+            Route::get('delivery-rates', [DeliveryRateController::class, 'edit'])->name('delivery-rates.edit');
+            Route::put('delivery-rates', [DeliveryRateController::class, 'update'])->name('delivery-rates.update');
             Route::get('shop-settings', [ShopSettingController::class, 'edit'])->name('shop-settings.edit');
             Route::put('shop-settings', [ShopSettingController::class, 'update'])->name('shop-settings.update');
         });

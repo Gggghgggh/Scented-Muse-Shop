@@ -40,6 +40,7 @@ export default function ProductCreate({
         price: '',
         flash_sale_price: '',
         stock_quantity: '0',
+        weight_kg: '1',
         variants: [
             {
                 size: '',
@@ -558,6 +559,32 @@ export default function ProductCreate({
                                     </p>
                                 </div>
 
+                                <div className="space-y-2">
+                                    <Label htmlFor="weight_kg">
+                                        Product weight (kg)
+                                    </Label>
+                                    <Input
+                                        id="weight_kg"
+                                        type="number"
+                                        min="0.01"
+                                        step="0.01"
+                                        value={data.weight_kg}
+                                        onChange={(event) =>
+                                            setData(
+                                                'weight_kg',
+                                                event.target.value,
+                                            )
+                                        }
+                                    />
+                                    <InputError message={errors.weight_kg} />
+                                    <p className="text-xs text-muted-foreground">
+                                        Used to calculate delivery fees at
+                                        checkout.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="grid gap-5 md:grid-cols-2">
                                 <div className="space-y-2">
                                     <Label htmlFor="photos">
                                         Product images
