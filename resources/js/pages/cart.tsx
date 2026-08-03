@@ -34,7 +34,7 @@ export default function CartPage({
     const [county, setCounty] = useState('Nairobi');
     const [town, setTown] = useState(kenyaLocations.Nairobi[0]);
     const [phone, setPhone] = useState('');
-    const [paymentMethod, setPaymentMethod] = useState('cash_on_delivery');
+    const paymentMethod = 'cash_on_delivery';
     const [processing, setProcessing] = useState(false);
     const [placed, setPlaced] = useState(false);
     const [notice, setNotice] = useState<{
@@ -500,23 +500,6 @@ export default function CartPage({
                                         placeholder="Phone number"
                                         className="h-12 w-full rounded-md border border-[#d7c4bd] px-3"
                                     />
-                                    <select
-                                        value={paymentMethod}
-                                        onChange={(event) =>
-                                            setPaymentMethod(event.target.value)
-                                        }
-                                        className="h-12 w-full rounded-md border border-[#d7c4bd] px-3"
-                                    >
-                                        <option value="cash_on_delivery">
-                                            Cash on delivery
-                                        </option>
-                                        <option value="mpesa">
-                                            M-Pesa test payment
-                                        </option>
-                                        <option value="card">
-                                            Card test payment
-                                        </option>
-                                    </select>
                                     <div className="rounded-md bg-[#fff7f2] p-3 text-sm text-[#7f5f53]">
                                         <p>Items: {formatPrice(total)}</p>
                                         <p>

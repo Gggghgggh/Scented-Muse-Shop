@@ -8,13 +8,9 @@ import {
     Heart,
     MessageSquare,
     PackageCheck,
-    RotateCcw,
-    Shield,
     ShoppingCart,
     Star,
-    Store,
     Tags,
-    Truck,
     X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -586,14 +582,6 @@ export default function ProductShow({
                                         ? `${selectedSizeQuantity} available${selectedSize ? ` in ${selectedSize}` : ''}`
                                         : 'Out of stock'}
                                 </p>
-                                <div className="mt-3 flex items-center gap-2">
-                                    <span className="rounded-sm bg-[#7c4be8] px-2 py-0.5 text-xs font-black text-white">
-                                        SCENTED MUSE INSTANT
-                                    </span>
-                                    <span className="text-sm font-semibold">
-                                        Get your order in 4 hours
-                                    </span>
-                                </div>
                                 <div className="mt-3 flex items-center gap-1">
                                     <Stars rating={Math.round(ratingAverage)} />
                                     <span className="ml-2 text-sm text-[#2563eb]">
@@ -1103,37 +1091,6 @@ function DeliveryPanel() {
                     </select>
                 </label>
             </div>
-            <div className="mx-4 rounded-sm border border-[#7c4be8]">
-                <div className="flex justify-between bg-[#7c4be8] px-3 py-1 text-sm font-bold text-white">
-                    <span>Get your order in 4 hours</span>
-                    <span>Details</span>
-                </div>
-                <DeliveryOption
-                    icon={Truck}
-                    title="Instant Delivery"
-                    text="Delivery Fees KSh 400"
-                />
-            </div>
-            <DeliveryOption
-                icon={Store}
-                title="Pickup Station"
-                text="Delivery Fees KSh 90. Ready for pickup on 23 July if you place your order within the next 7hrs 12mins"
-            />
-            <DeliveryOption
-                icon={Truck}
-                title="Door Delivery"
-                text="Delivery Fees KSh 200. Ready for delivery on 23 July if you place your order within the next 7hrs 12mins"
-            />
-            <DeliveryOption
-                icon={RotateCcw}
-                title="Return Policy"
-                text="Easy Return, Quick Refund. Details"
-            />
-            <DeliveryOption
-                icon={Shield}
-                title="Warranty"
-                text="1 Year warranty from Scented Muse"
-            />
         </section>
     );
 }
@@ -1217,28 +1174,6 @@ function ReviewForm({
                 Submit review
             </button>
         </form>
-    );
-}
-
-function DeliveryOption({
-    icon: Icon,
-    title,
-    text,
-}: {
-    icon: typeof Truck;
-    title: string;
-    text: string;
-}) {
-    return (
-        <div className="flex gap-3 border-b border-[#eee1dc] p-4 last:border-b-0">
-            <span className="flex size-12 shrink-0 items-center justify-center rounded-sm border border-[#d1d5db]">
-                <Icon className="size-6 text-[#555]" />
-            </span>
-            <div>
-                <h3 className="font-black">{title}</h3>
-                <p className="text-sm leading-5 text-[#333]">{text}</p>
-            </div>
-        </div>
     );
 }
 
