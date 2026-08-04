@@ -2,23 +2,26 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DeliveryRate;
 use App\Models\Order;
 use App\Models\Payment;
-use App\Models\DeliveryRate;
 use App\Models\Product;
 use App\Models\ShopSetting;
+use App\Services\LipanaService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class CheckoutController extends Controller
 {
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, LipanaService $lipana): RedirectResponse
     {
         $data = $request->validate([
             'county' => ['required', 'string', 'max:80'],
@@ -32,7 +35,7 @@ class CheckoutController extends Controller
             'items.*.quantity' => ['required', 'integer', 'min:1', 'max:999'],
         ]);
 
-        $order = DB::transaction(function () use ($data, $request): Order {
+        $checkout = DB::transaction(function () use ($data, $request): array {
             $orderItems = [];
             $subtotal = 0;
             $totalWeightKg = 0.0;
@@ -95,30 +98,131 @@ class CheckoutController extends Controller
                 'notes' => 'Customer checkout order.',
             ]);
 
-            Payment::create([
+            $payment = Payment::create([
                 'order_id' => $order->id,
                 'payment_number' => 'PAY-'.Str::upper(Str::random(8)),
                 'customer_name' => $request->user()->name,
                 'method' => $data['payment_method'],
                 'amount' => $total,
-                'status' => $data['payment_method'] === 'cash_on_delivery' ? 'pending' : 'paid',
-                'transaction_reference' => $data['payment_method'] === 'cash_on_delivery'
-                    ? null
-                    : 'FAKE-'.Str::upper(Str::random(10)),
+                'status' => 'pending',
+                'transaction_reference' => null,
                 'notes' => $data['payment_method'] === 'cash_on_delivery'
                     ? 'Payment to be collected on delivery.'
-                    : 'Simulated successful checkout payment.',
+                    : 'Awaiting M-Pesa confirmation.',
             ]);
 
-            return $order;
+            return [$order, $payment];
         });
+
+        [$order, $payment] = $checkout;
+        $message = 'Your order has been placed successfully.';
+
+        if ($payment->method === 'mpesa') {
+            try {
+                $response = $lipana->initiateStkPush((float) $payment->amount, $data['customer_phone'], $order->order_number);
+
+                $payment->update([
+                    'lipana_transaction_id' => data_get($response, 'data.transactionId'),
+                    'lipana_checkout_request_id' => data_get($response, 'data.checkoutRequestID'),
+                    'transaction_reference' => data_get($response, 'data.transactionId', data_get($response, 'data.checkoutRequestID')),
+                    'notes' => data_get($response, 'data.message', data_get($response, 'message', 'Lipana STK prompt sent. Awaiting confirmation.')),
+                ]);
+
+                $message = 'Your order has been placed. Check your phone and enter your M-Pesa PIN to complete payment.';
+            } catch (\Throwable $exception) {
+                Log::error('Lipana STK push failed', [
+                    'order_id' => $order->id,
+                    'payment_id' => $payment->id,
+                    'message' => $exception->getMessage(),
+                ]);
+
+                $payment->update([
+                    'status' => 'failed',
+                    'notes' => 'M-Pesa prompt could not be sent. Please contact support or choose cash on delivery.',
+                ]);
+                $order->update(['status' => 'payment_failed']);
+
+                throw ValidationException::withMessages([
+                    'payment_method' => 'M-Pesa payment could not start. Please confirm production Lipana credentials and try again.',
+                ]);
+            }
+        }
 
         return to_route('orders.mine')->with('checkout', [
             'type' => 'success',
-            'message' => 'Your order has been placed successfully.',
+            'message' => $message,
             'order_number' => $order->order_number,
             'receipt_url' => route('orders.receipt', $order),
         ]);
+    }
+
+    public function lipanaWebhook(Request $request, LipanaService $lipana): JsonResponse
+    {
+        if (! $lipana->verifyWebhook($request)) {
+            Log::warning('Lipana webhook signature verification failed');
+
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $payload = $request->all();
+        $event = (string) data_get($payload, 'event', '');
+        $metadata = $lipana->extractWebhookData($payload);
+        $transactionId = $metadata['transaction_id'];
+        $checkoutRequestId = $metadata['checkout_request_id'];
+
+        if ($transactionId === null && $checkoutRequestId === null) {
+            Log::warning('Lipana webhook missing transaction identifiers', ['payload' => $payload]);
+
+            return response()->json(['status' => 'success']);
+        }
+
+        $payment = Payment::query()
+            ->where(function ($query) use ($transactionId, $checkoutRequestId): void {
+                if ($transactionId !== null) {
+                    $query->where('lipana_transaction_id', $transactionId)
+                        ->orWhere('transaction_reference', $transactionId);
+                }
+
+                if ($checkoutRequestId !== null) {
+                    $query->orWhere('lipana_checkout_request_id', $checkoutRequestId)
+                        ->orWhere('transaction_reference', $checkoutRequestId);
+                }
+            })
+            ->first();
+
+        if ($payment === null) {
+            Log::warning('Lipana webhook for unknown transaction', [
+                'transaction_id' => $transactionId,
+                'checkout_request_id' => $checkoutRequestId,
+                'payload' => $payload,
+            ]);
+
+            return response()->json(['status' => 'success']);
+        }
+
+        $successful = $event === 'transaction.success' || $metadata['status'] === 'success';
+        $failed = in_array($event, ['transaction.failed', 'transaction.cancelled'], true)
+            || in_array($metadata['status'], ['failed', 'cancelled'], true);
+
+        DB::transaction(function () use ($payment, $payload, $event, $metadata, $successful, $failed): void {
+            $payment->update([
+                'status' => $successful ? 'paid' : ($failed ? 'failed' : $payment->status),
+                'transaction_reference' => $metadata['receipt'] ?? $metadata['transaction_id'] ?? $payment->transaction_reference,
+                'lipana_transaction_id' => $metadata['transaction_id'] ?? $payment->lipana_transaction_id,
+                'lipana_checkout_request_id' => $metadata['checkout_request_id'] ?? $payment->lipana_checkout_request_id,
+                'lipana_event' => $event !== '' ? $event : $payment->lipana_event,
+                'lipana_webhook_payload' => $payload,
+                'notes' => $successful ? 'Lipana payment confirmed.' : ($failed ? 'Lipana payment failed or was cancelled.' : $payment->notes),
+            ]);
+
+            if ($successful || $failed) {
+                $payment->order?->update([
+                    'status' => $successful ? 'paid' : 'payment_failed',
+                ]);
+            }
+        });
+
+        return response()->json(['status' => 'success']);
     }
 
     public function receipt(Request $request, Order $order): Response

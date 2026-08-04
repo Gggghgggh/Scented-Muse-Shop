@@ -80,6 +80,7 @@ Route::get('cart', fn () => Inertia::render('cart', [
         ->where('is_active', true)
         ->get(['county', 'town', 'fee_0_1kg', 'fee_1_3kg', 'fee_3_5kg', 'fee_over_5kg']),
 ]))->name('cart');
+Route::post('lipana/webhook', [CheckoutController::class, 'lipanaWebhook'])->name('lipana.webhook');
 Route::get('my-orders', fn (Request $request) => Inertia::render('orders', [
     'orders' => $request->user()
         ->orders()

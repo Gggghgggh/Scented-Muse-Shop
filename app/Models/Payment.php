@@ -16,6 +16,10 @@ use Illuminate\Support\Carbon;
  * @property string $amount
  * @property string $status
  * @property string|null $transaction_reference
+ * @property string|null $lipana_transaction_id
+ * @property string|null $lipana_checkout_request_id
+ * @property string|null $lipana_event
+ * @property array<string, mixed>|null $lipana_webhook_payload
  * @property string|null $notes
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -28,6 +32,10 @@ use Illuminate\Support\Carbon;
     'amount',
     'status',
     'transaction_reference',
+    'lipana_transaction_id',
+    'lipana_checkout_request_id',
+    'lipana_event',
+    'lipana_webhook_payload',
     'notes',
 ])]
 class Payment extends Model
@@ -36,6 +44,7 @@ class Payment extends Model
     {
         return [
             'amount' => 'decimal:2',
+            'lipana_webhook_payload' => 'array',
         ];
     }
 

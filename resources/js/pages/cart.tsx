@@ -36,7 +36,7 @@ export default function CartPage({
     const [county, setCounty] = useState('Nairobi');
     const [town, setTown] = useState(kenyaLocations.Nairobi[0]);
     const [phone, setPhone] = useState('');
-    const paymentMethod = 'cash_on_delivery';
+    const paymentMethod = 'mpesa';
     const [processing, setProcessing] = useState(false);
     const [placed, setPlaced] = useState(false);
     const [notice, setNotice] = useState<{
@@ -189,7 +189,7 @@ export default function CartPage({
                 onSuccess: () => {
                     setPlaced(true);
                     clearCart();
-                    showNotice('success', 'Your order has been placed.');
+                    showNotice('success', 'Check your phone for the M-Pesa prompt.');
                 },
                 onError: (errors) => {
                     showNotice(
@@ -499,7 +499,7 @@ export default function CartPage({
                                         onChange={(event) =>
                                             setPhone(event.target.value)
                                         }
-                                        placeholder="Phone number"
+                                        placeholder="M-Pesa phone number"
                                         className="h-12 w-full rounded-md border border-[#d7c4bd] px-3"
                                     />
                                     <div className="rounded-md bg-[#fff7f2] p-3 text-sm text-[#7f5f53]">
@@ -515,6 +515,9 @@ export default function CartPage({
                                         <p className="mt-1 font-black text-[#3b2147]">
                                             Total: {formatPrice(grandTotal)}
                                         </p>
+                                        <p className="mt-2 font-semibold text-[#3b2147]">
+                                            Payment: Lipa na M-Pesa STK prompt
+                                        </p>
                                     </div>
                                     <button
                                         disabled={
@@ -524,8 +527,8 @@ export default function CartPage({
                                         className="h-12 w-full rounded-md bg-[#e85d4f] font-black text-white disabled:opacity-50"
                                     >
                                         {processing
-                                            ? 'Placing order...'
-                                            : 'Place order'}
+                                            ? 'Sending M-Pesa prompt...'
+                                            : 'Pay with M-Pesa'}
                                     </button>
                                 </div>
                             )}

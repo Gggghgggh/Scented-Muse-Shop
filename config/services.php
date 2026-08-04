@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'lipana' => [
+        'base_url' => env('LIPANA_BASE_URL', 'https://api.lipana.dev/v1'),
+        'publishable_key' => env('LIPANA_PUBLISHABLE_KEY'),
+        'secret_key' => env('LIPANA_SECRET_KEY'),
+        'webhook_secret' => env('LIPANA_WEBHOOK_SECRET'),
+    ],
+
 ];
