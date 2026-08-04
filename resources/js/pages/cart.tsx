@@ -1,6 +1,14 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { CheckCircle, Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import {
+    CheckCircle,
+    LoaderCircle,
+    Minus,
+    Plus,
+    ShoppingCart,
+    Trash2,
+    XCircle,
+} from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
 import { CustomerNavbar } from '@/components/customer-navbar';
 import { kenyaLocations } from '@/lib/kenya-locations';
 import { getCartItems  } from '@/lib/shop-storage';
@@ -14,6 +22,30 @@ type DeliveryRate = {
     fee_1_3kg: string | number;
     fee_3_5kg: string | number;
     fee_over_5kg: string | number;
+};
+
+type CheckoutResponse = {
+    message: string;
+    order_number: string;
+    payment_id: number;
+    payment_status: string;
+    status_url: string;
+    orders_url: string;
+};
+
+type PaymentStatusResponse = {
+    payment_status: string;
+    order_number: string;
+    receipt_number: string | null;
+    orders_url: string;
+};
+
+type PaymentModalState = {
+    state: 'loading' | 'success' | 'failed';
+    title: string;
+    message: string;
+    orderNumber?: string;
+    receiptNumber?: string | null;
 };
 
 const formatPrice = (price: string | number) =>
@@ -39,6 +71,10 @@ export default function CartPage({
     const paymentMethod = 'mpesa';
     const [processing, setProcessing] = useState(false);
     const [placed, setPlaced] = useState(false);
+    const [paymentModal, setPaymentModal] = useState<PaymentModalState | null>(
+        null,
+    );
+    const pollTimeoutRef = useRef<number | null>(null);
     const [notice, setNotice] = useState<{
         type: 'success' | 'error';
         message: string;
@@ -136,7 +172,7 @@ export default function CartPage({
         showNotice('success', 'Product removed from cart.');
     }
 
-    function placeOrder() {
+    async function placeOrder() {
         if (items.length === 0) {
             showNotice('error', 'Your cart is empty.');
 
@@ -167,40 +203,143 @@ export default function CartPage({
         }
 
         setProcessing(true);
-        router.post(
-            '/checkout',
-            {
-                county,
-                town,
-                customer_phone: phone,
-                payment_method: paymentMethod,
-                items: items.map((item) => ({
-                    id: item.id,
-                    size: item.size ?? '',
-                    color: item.color ?? '',
-                    quantity: Math.min(
-                        item.quantity ?? 1,
-                        getItemMaxQuantity(item),
-                    ),
-                })),
-            },
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    setPlaced(true);
-                    clearCart();
-                    showNotice('success', 'Check your phone for the M-Pesa prompt.');
+        setPaymentModal({
+            state: 'loading',
+            title: 'Waiting for M-Pesa',
+            message: 'Check your phone and enter your M-Pesa PIN.',
+        });
+
+        try {
+            const response = await fetch('/checkout', {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
                 },
-                onError: (errors) => {
-                    showNotice(
-                        'error',
-                        Object.values(errors)[0] ??
-                            'Unable to place the order. Please check your cart.',
-                    );
+                body: JSON.stringify({
+                    county,
+                    town,
+                    customer_phone: phone,
+                    payment_method: paymentMethod,
+                    items: items.map((item) => ({
+                        id: item.id,
+                        size: item.size ?? '',
+                        color: item.color ?? '',
+                        quantity: Math.min(
+                            item.quantity ?? 1,
+                            getItemMaxQuantity(item),
+                        ),
+                    })),
+                }),
+            });
+
+            const payload = await response.json();
+
+            if (!response.ok) {
+                const message =
+                    payload?.message ??
+                    firstValidationError(payload?.errors) ??
+                    'Unable to start M-Pesa payment. Please try again.';
+
+                throw new Error(String(message));
+            }
+
+            const checkout = payload as CheckoutResponse;
+
+            setPaymentModal({
+                state: 'loading',
+                title: 'Waiting for M-Pesa',
+                message: checkout.message,
+                orderNumber: checkout.order_number,
+            });
+            pollPaymentStatus(checkout.status_url, checkout.orders_url, 0);
+        } catch (error) {
+            setPaymentModal({
+                state: 'failed',
+                title: 'Payment not started',
+                message:
+                    error instanceof Error
+                        ? error.message
+                        : 'Unable to start M-Pesa payment. Please try again.',
+            });
+            showNotice('error', 'Unable to start M-Pesa payment.');
+        } finally {
+            setProcessing(false);
+        }
+    }
+
+    async function pollPaymentStatus(
+        statusUrl: string,
+        ordersUrl: string,
+        attempt: number,
+    ) {
+        if (attempt >= 45) {
+            setPaymentModal({
+                state: 'failed',
+                title: 'Payment timed out',
+                message:
+                    'We did not receive M-Pesa confirmation in time. Please stay on checkout and try again.',
+            });
+
+            return;
+        }
+
+        try {
+            const response = await fetch(statusUrl, {
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
                 },
-                onFinish: () => setProcessing(false),
-            },
+            });
+            const status = (await response.json()) as PaymentStatusResponse;
+
+            if (status.payment_status === 'paid') {
+                setPlaced(true);
+                clearCart();
+                setPaymentModal({
+                    state: 'success',
+                    title: 'Payment successful',
+                    message: 'Your transaction was confirmed.',
+                    orderNumber: status.order_number,
+                    receiptNumber: status.receipt_number,
+                });
+                window.setTimeout(() => router.visit(ordersUrl), 1400);
+
+                return;
+            }
+
+            if (['failed', 'refunded'].includes(status.payment_status)) {
+                setPaymentModal({
+                    state: 'failed',
+                    title: 'Payment unsuccessful',
+                    message:
+                        'The transaction was not completed. Please confirm your phone number and try again.',
+                    orderNumber: status.order_number,
+                });
+
+                return;
+            }
+        } catch {
+            // Keep polling briefly; transient network errors should not fail a live payment wait.
+        }
+
+        pollTimeoutRef.current = window.setTimeout(
+            () => pollPaymentStatus(statusUrl, ordersUrl, attempt + 1),
+            2000,
         );
+    }
+
+    function closePaymentModal() {
+        if (pollTimeoutRef.current !== null) {
+            window.clearTimeout(pollTimeoutRef.current);
+            pollTimeoutRef.current = null;
+        }
+
+        if (paymentModal?.state !== 'loading') {
+            setPaymentModal(null);
+        }
     }
 
     function showNotice(type: 'success' | 'error', message: string) {
@@ -214,6 +353,12 @@ export default function CartPage({
             <main className="min-h-screen bg-[#fff7f2] text-[#17131f]">
                 <CustomerNavbar />
                 {notice && <FeedbackModal {...notice} />}
+                {paymentModal && (
+                    <PaymentProgressModal
+                        {...paymentModal}
+                        onClose={closePaymentModal}
+                    />
+                )}
                 <section className="mx-auto mt-4 max-w-5xl rounded-md bg-white p-5 shadow-sm">
                     <div className="flex items-center justify-between gap-4">
                         <h1 className="flex items-center gap-3 text-2xl font-black text-[#3b2147]">
@@ -650,4 +795,91 @@ function FeedbackModal({
             <p className="mt-1 text-sm text-[#7f5f53]">{message}</p>
         </div>
     );
+}
+
+function PaymentProgressModal({
+    state,
+    title,
+    message,
+    orderNumber,
+    receiptNumber,
+    onClose,
+}: PaymentModalState & { onClose: () => void }) {
+    const isLoading = state === 'loading';
+    const isSuccess = state === 'success';
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-sm rounded-md bg-white p-6 text-center shadow-2xl ring-1 ring-[#ead9d1]">
+                <div
+                    className={`mx-auto flex size-16 items-center justify-center rounded-full ${
+                        isSuccess || isLoading
+                            ? 'bg-[#e8f8ed] text-[#11823b]'
+                            : 'bg-[#ffeceb] text-[#d71920]'
+                    }`}
+                >
+                    {isLoading ? (
+                        <LoaderCircle className="size-9 animate-spin" />
+                    ) : isSuccess ? (
+                        <CheckCircle className="size-10" />
+                    ) : (
+                        <XCircle className="size-10" />
+                    )}
+                </div>
+                <h2 className="mt-4 text-xl font-black text-[#3b2147]">
+                    {title}
+                </h2>
+                <p className="mt-2 text-sm font-semibold text-[#7f5f53]">
+                    {message}
+                </p>
+                {orderNumber && (
+                    <p className="mt-4 rounded-md bg-[#fff7f2] px-3 py-2 text-sm font-black text-[#3b2147]">
+                        Order: {orderNumber}
+                    </p>
+                )}
+                {receiptNumber && (
+                    <p className="mt-2 rounded-md bg-[#e8f8ed] px-3 py-2 text-sm font-black text-[#11823b]">
+                        Code: {receiptNumber}
+                    </p>
+                )}
+                {isLoading ? (
+                    <p className="mt-4 text-xs font-bold text-[#11823b]">
+                        Waiting for Lipana confirmation...
+                    </p>
+                ) : (
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className={`mt-5 h-11 w-full rounded-md font-black text-white ${
+                            isSuccess ? 'bg-[#11823b]' : 'bg-[#d71920]'
+                        }`}
+                    >
+                        {isSuccess ? 'Opening My Orders...' : 'Back to checkout'}
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function csrfToken() {
+    return (
+        document
+            .querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
+            ?.getAttribute('content') ?? ''
+    );
+}
+
+function firstValidationError(errors: unknown) {
+    if (!errors || typeof errors !== 'object') {
+        return null;
+    }
+
+    const first = Object.values(errors)[0];
+
+    if (Array.isArray(first) && typeof first[0] === 'string') {
+        return first[0];
+    }
+
+    return typeof first === 'string' ? first : null;
 }

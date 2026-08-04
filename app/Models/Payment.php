@@ -18,6 +18,8 @@ use Illuminate\Support\Carbon;
  * @property string|null $transaction_reference
  * @property string|null $lipana_transaction_id
  * @property string|null $lipana_checkout_request_id
+ * @property string|null $lipana_receipt_number
+ * @property string|null $lipana_customer_name
  * @property string|null $lipana_event
  * @property array<string, mixed>|null $lipana_webhook_payload
  * @property string|null $notes
@@ -34,6 +36,8 @@ use Illuminate\Support\Carbon;
     'transaction_reference',
     'lipana_transaction_id',
     'lipana_checkout_request_id',
+    'lipana_receipt_number',
+    'lipana_customer_name',
     'lipana_event',
     'lipana_webhook_payload',
     'notes',

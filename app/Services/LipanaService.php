@@ -59,7 +59,7 @@ class LipanaService
     }
 
     /**
-     * @return array{transaction_id: string|null, checkout_request_id: string|null, receipt: string|null, amount: float|null, phone: string|null, status: string|null}
+     * @return array{transaction_id: string|null, checkout_request_id: string|null, receipt: string|null, customer_name: string|null, amount: float|null, phone: string|null, status: string|null}
      */
     public function extractWebhookData(array $payload): array
     {
@@ -68,7 +68,24 @@ class LipanaService
         return [
             'transaction_id' => $this->stringValue(data_get($data, 'transactionId', data_get($data, 'transaction_id'))),
             'checkout_request_id' => $this->stringValue(data_get($data, 'checkoutRequestID', data_get($data, 'checkout_request_id'))),
-            'receipt' => $this->stringValue(data_get($data, 'mpesaReceiptNumber', data_get($data, 'receipt', data_get($data, 'receiptNumber')))),
+            'receipt' => $this->firstString($data, [
+                'mpesaReceiptNumber',
+                'mpesa_receipt_number',
+                'safaricomTransactionCode',
+                'safaricom_transaction_code',
+                'receiptNumber',
+                'receipt_number',
+                'receipt',
+            ]),
+            'customer_name' => $this->firstString($data, [
+                'customerName',
+                'customer_name',
+                'payerName',
+                'payer_name',
+                'accountName',
+                'account_name',
+                'name',
+            ]),
             'amount' => is_numeric(data_get($data, 'amount')) ? (float) data_get($data, 'amount') : null,
             'phone' => $this->stringValue(data_get($data, 'phone')),
             'status' => $this->stringValue(data_get($data, 'status')),
@@ -124,6 +141,23 @@ class LipanaService
 
         if (is_int($value) || is_float($value)) {
             return (string) $value;
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     * @param array<int, string> $keys
+     */
+    private function firstString(array $data, array $keys): ?string
+    {
+        foreach ($keys as $key) {
+            $value = $this->stringValue(data_get($data, $key));
+
+            if ($value !== null) {
+                return $value;
+            }
         }
 
         return null;

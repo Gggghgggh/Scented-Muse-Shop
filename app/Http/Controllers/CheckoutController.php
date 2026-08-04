@@ -21,7 +21,7 @@ use Illuminate\Validation\ValidationException;
 
 class CheckoutController extends Controller
 {
-    public function store(Request $request, LipanaService $lipana): RedirectResponse
+    public function store(Request $request, LipanaService $lipana): JsonResponse|RedirectResponse
     {
         $data = $request->validate([
             'county' => ['required', 'string', 'max:80'],
@@ -148,11 +148,46 @@ class CheckoutController extends Controller
             }
         }
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => $message,
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'payment_id' => $payment->id,
+                'payment_status' => $payment->status,
+                'status_url' => route('checkout.payment-status', $payment),
+                'orders_url' => route('orders.mine'),
+            ]);
+        }
+
         return to_route('orders.mine')->with('checkout', [
             'type' => 'success',
             'message' => $message,
             'order_number' => $order->order_number,
             'receipt_url' => route('orders.receipt', $order),
+        ]);
+    }
+
+    public function paymentStatus(Request $request, Payment $payment): JsonResponse
+    {
+        $payment->load('order:id,user_id,order_number,status,total_amount');
+        $order = $payment->order;
+
+        abort_unless(
+            $order !== null && ((int) $order->user_id === (int) $request->user()->id || $request->user()->is_admin),
+            403,
+        );
+
+        return response()->json([
+            'payment_id' => $payment->id,
+            'payment_number' => $payment->payment_number,
+            'payment_status' => $payment->status,
+            'order_id' => $order->id,
+            'order_number' => $order->order_number,
+            'order_status' => $order->status,
+            'amount' => $payment->amount,
+            'receipt_number' => $payment->lipana_receipt_number,
+            'orders_url' => route('orders.mine'),
         ]);
     }
 
@@ -210,6 +245,8 @@ class CheckoutController extends Controller
                 'transaction_reference' => $metadata['receipt'] ?? $metadata['transaction_id'] ?? $payment->transaction_reference,
                 'lipana_transaction_id' => $metadata['transaction_id'] ?? $payment->lipana_transaction_id,
                 'lipana_checkout_request_id' => $metadata['checkout_request_id'] ?? $payment->lipana_checkout_request_id,
+                'lipana_receipt_number' => $metadata['receipt'] ?? $payment->lipana_receipt_number,
+                'lipana_customer_name' => $metadata['customer_name'] ?? $payment->lipana_customer_name,
                 'lipana_event' => $event !== '' ? $event : $payment->lipana_event,
                 'lipana_webhook_payload' => $payload,
                 'notes' => $successful ? 'Lipana payment confirmed.' : ($failed ? 'Lipana payment failed or was cancelled.' : $payment->notes),

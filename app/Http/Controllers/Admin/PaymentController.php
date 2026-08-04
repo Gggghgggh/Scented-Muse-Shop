@@ -30,6 +30,9 @@ class PaymentController extends Controller
                             ->orWhere('method', 'like', "%{$search}%")
                             ->orWhere('status', 'like', "%{$search}%")
                             ->orWhere('transaction_reference', 'like', "%{$search}%")
+                            ->orWhere('lipana_receipt_number', 'like', "%{$search}%")
+                            ->orWhere('lipana_customer_name', 'like', "%{$search}%")
+                            ->orWhere('lipana_transaction_id', 'like', "%{$search}%")
                             ->orWhereHas('order', fn ($query) => $query->where('order_number', 'like', "%{$search}%"));
                     });
                 })

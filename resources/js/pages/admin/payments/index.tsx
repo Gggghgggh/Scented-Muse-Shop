@@ -18,6 +18,9 @@ type Payment = {
     amount: string;
     status: string;
     transaction_reference: string | null;
+    lipana_receipt_number: string | null;
+    lipana_customer_name: string | null;
+    lipana_transaction_id: string | null;
 };
 
 export default function PaymentIndex({
@@ -81,11 +84,11 @@ export default function PaymentIndex({
                                     setQuery(event.target.value)
                                 }
                                 className="h-full border-0 px-0 shadow-none focus-visible:ring-0"
-                                placeholder="Search by payment number, customer, method, amount, status, or reference"
+                                placeholder="Search by payment number, customer, method, status, receipt, or Lipana ID"
                             />
                         </label>
-                        <div className="overflow-hidden rounded-md border">
-                            <table className="w-full text-sm">
+                        <div className="overflow-x-auto rounded-md border">
+                            <table className="w-full min-w-[980px] text-sm">
                                 <thead className="bg-muted text-muted-foreground">
                                     <tr>
                                         {[
@@ -94,6 +97,8 @@ export default function PaymentIndex({
                                             'Method',
                                             'Amount',
                                             'Status',
+                                            'Safaricom Code',
+                                            'Lipana Customer',
                                             'Actions',
                                         ].map((header) => (
                                             <th
@@ -125,6 +130,15 @@ export default function PaymentIndex({
                                             </td>
                                             <td className="px-4 py-3">
                                                 {payment.status}
+                                            </td>
+                                            <td className="px-4 py-3 font-medium">
+                                                {payment.lipana_receipt_number ??
+                                                    payment.transaction_reference ??
+                                                    '-'}
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                {payment.lipana_customer_name ??
+                                                    '-'}
                                             </td>
                                             <td className="px-4 py-3">
                                                 <div className="flex justify-end gap-2">
@@ -158,7 +172,7 @@ export default function PaymentIndex({
                                     {payments.data.length === 0 && (
                                         <tr>
                                             <td
-                                                colSpan={6}
+                                                colSpan={8}
                                                 className="px-4 py-8 text-center text-muted-foreground"
                                             >
                                                 No payments yet.

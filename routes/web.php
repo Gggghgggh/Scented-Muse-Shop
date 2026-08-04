@@ -170,6 +170,7 @@ Route::post('products/{product}/reviews', function (Request $request, Product $p
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    Route::get('checkout/payments/{payment}/status', [CheckoutController::class, 'paymentStatus'])->name('checkout.payment-status');
     Route::get('my-orders/{order}/receipt', [CheckoutController::class, 'receipt'])->name('orders.receipt');
 });
 

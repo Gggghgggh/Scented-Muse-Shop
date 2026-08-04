@@ -2,6 +2,7 @@
 
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\User;
 
 function lipanaWebhookOrder(): Order
 {
@@ -50,6 +51,7 @@ test('lipana success webhook marks payment and order as paid', function () {
             'status' => 'success',
             'phone' => '+254700000000',
             'receipt' => 'RHQ123ABC',
+            'customerName' => 'Jane M-Pesa Payer',
         ],
     ], JSON_THROW_ON_ERROR);
 
@@ -63,6 +65,8 @@ test('lipana success webhook marks payment and order as paid', function () {
     expect($payment->refresh())
         ->status->toBe('paid')
         ->transaction_reference->toBe('RHQ123ABC')
+        ->lipana_receipt_number->toBe('RHQ123ABC')
+        ->lipana_customer_name->toBe('Jane M-Pesa Payer')
         ->lipana_event->toBe('transaction.success')
         ->and($order->refresh()->status)->toBe('paid');
 });
@@ -118,4 +122,40 @@ test('lipana webhook rejects invalid signatures when a webhook secret is configu
         'HTTP_X_LIPANA_SIGNATURE' => 'invalid-signature',
     ], $payload)
         ->assertUnauthorized();
+});
+
+test('customer can poll their checkout payment status', function () {
+    $user = User::factory()->create();
+    $order = Order::create([
+        'user_id' => $user->id,
+        'customer_name' => $user->name,
+        'customer_email' => $user->email,
+        'customer_phone' => '0700000000',
+        'county' => 'Nairobi',
+        'town' => 'Westlands',
+        'items' => [['name' => 'Room Spray', 'quantity' => 1]],
+        'delivery_fee' => 200,
+        'total_amount' => 1200,
+        'status' => 'paid',
+        'order_number' => 'HOD-POLL'.uniqid(),
+    ]);
+    $payment = Payment::create([
+        'order_id' => $order->id,
+        'payment_number' => 'PAY-POLL'.uniqid(),
+        'customer_name' => $user->name,
+        'method' => 'mpesa',
+        'amount' => 1200,
+        'status' => 'paid',
+        'lipana_receipt_number' => 'RHQ123ABC',
+    ]);
+
+    $this->actingAs($user)
+        ->getJson(route('checkout.payment-status', $payment))
+        ->assertOk()
+        ->assertJson([
+            'payment_id' => $payment->id,
+            'payment_status' => 'paid',
+            'order_number' => $order->order_number,
+            'receipt_number' => 'RHQ123ABC',
+        ]);
 });
